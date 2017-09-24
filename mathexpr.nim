@@ -1,99 +1,169 @@
-{.compile: "csource/tinyexpr.c"}
 import math, strutils
 
-type
-  INNER_C_UNION_2023515159 = object {.union.}
-    value: cdouble
-    bound: ptr cdouble
-    function: pointer
-
-  te_expr = object
-    `type`*: cint
-    ano_2023843156: INNER_C_UNION_2023515159
-    parameters: array[1, pointer]
-
-
 const
-  TE_VARIABLE = 0
-  TE_FUNCTION0 = 8
-  TE_FUNCTION1 = 9
-  TE_FUNCTION2 = 10
-  TE_FUNCTION3 = 11
-  TE_FUNCTION4 = 12
-  TE_FUNCTION5 = 13
-  TE_FUNCTION6 = 14
-  TE_FUNCTION7 = 15
-  TE_CLOSURE0 = 16
-  TE_CLOSURE1 = 17
-  TE_CLOSURE2 = 18
-  TE_CLOSURE3 = 19
-  TE_CLOSURE4 = 20
-  TE_CLOSURE5 = 21
-  TE_CLOSURE6 = 22
-  TE_CLOSURE7 = 23
-  TE_FLAG_PURE = 32
+  ArgsErrorMsg = "Incorrect number of arguments at pos $1 in function `$2`"
+  CharErrorMsg = "Unexpected char `$1` at pos $2"
 
-type
-  te_variable = object
-    name: cstring
-    address: pointer
-    `type`: cint
-    context: pointer
+proc eval*(data: string): float = 
+  ## Evaluates math expression from string *data* and returns result as a float
+  var data = data.toLowerAscii()
 
-##  Parses the input expression, evaluates it, and frees it.
-##  Returns NaN on error.
-proc te_interp(expression: cstring; error: ptr cint): cdouble {.importc.}
+  var
+    pos = 0 ## Current position
+    ch = data[0]
+  
+  template nextChar = 
+    ## Gets next char
+    inc pos
+    ch = data[pos]
+  
+  proc eat(charToEat: char): bool {.inline.} = 
+    ## Skips all whitespace characters, 
+    ## checks if current character is *charToEat* and skips it
+    while ch in Whitespace: nextChar()
+    if ch == charToEat: 
+      nextChar()
+      result = true
+  
+  # We forward-declare these two procs because we have a recursive dependency
+  proc parseExpression: float
+  proc parseFactor: float
+  
+  proc parseArgumentsAux(argsNum: int): seq[float] = 
+    ## Parses any number of arguments (except 1)
+    if argsNum != -1:
+      result = newSeqOfCap[float](argsNum)
+    else:
+      result = newSeq[float]()
+    # No arguments at all
+    if ch != ',': return
+    while ch == ',':
+      nextChar()
+      result.add parseExpression()
+    nextChar()
+    if argsNum != -1 and argsNum != result.len:
+      # Return nothing
+      result = nil
+    
+  template getArgs(argsNum = 0, allowZeroArgs = false): untyped {.dirty.} = 
+    ## Gets all arguments for current function
+    var data = @[parseFactor()]
+    # If we need to parse more than 1 argument
+    if argsNum != 1: data.add parseArgumentsAux(argsNum - 1)
+    
+    # If number of given/needed arguments is wrong:
+    if data.isNil or (not allowZeroArgs and data.len == 0):
+      raise newException(ValueError, ArgsErrorMsg % [$pos, $funcName])
+    data
+  
+  template getArg(): untyped = 
+    getArgs(1)[0]
 
-##  Parses the input expression and binds variables.
-##  Returns NULL on error.
-proc te_compile(expression: cstring; variables: ptr te_variable; var_count: cint;
-                error: ptr cint): ptr te_expr {.importc.}
+  proc parseFactor: float = 
+    # Unary + and -
+    if eat('+'): return parseFactor()
+    elif eat('-'): return -parseFactor()
+    
+    let startPos = pos
 
-##  Evaluates the expression.
-proc te_eval(n: ptr te_expr): cdouble {.importc.}
+    # Parentheses
+    if eat('('):
+      # We allow zero number of arguments by checking for ')' here
+      if ch != ')': result = parseExpression()
+      discard eat(')')
+    
+    # First char in function name should be in latin alphabet
+    
+    elif ch in {'a'..'z'}:
+      # Other chars can also be numerical
+      while ch in {'a'..'z', '0'..'9'}: nextChar()
+      let funcName = data[startPos..<pos]
+      case funcName
+      # Functions
+      of "abs": result = abs(getArg())
+      of "acos", "arccos": result = arccos(getArg())
+      of "asin", "arcsin": result = arcsin(getArg())
+      of "atan", "arctan": result = arctan(getArg())
+      of "atan2", "arctan2":
+        let args = getArgs(2)
+        result = arctan2(args[0], args[1])
+      of "ceil": result = ceil(getArg())
+      of "cos": result = cos(getArg())
+      of "cosh": result = cosh(getArg())
+      of "exp": result = exp(getArg())
+      of "sqrt": result = sqrt(getArg())
+      of "fac": result = float fac(int(getArg()))
+      of "floor": result = floor(getArg())
+      of "ln": result = ln(getArg())
+      of "log", "log10": result = log10(getArg())
+      of "log2": result = log2(getArg())
+      of "max": result = max(getArgs())
+      of "min": result = min(getArgs())
+      of "ncr", "binom": 
+        let args = getArgs(2)
+        result = float binom(int args[0], int args[1])
+      of "npr":
+        let args = getArgs(2)
+        result = float binom(int args[0], int args[1]) * fac(int args[1])
+      of "pow":
+        let args = getArgs(2)
+        result = pow(args[0], args[1])
+      of "sin": result = sin(getArg())
+      of "sinh": result = sinh(getArg())
+      of "tan": result = tan(getArg())
+      of "tanh": result = tanh(getArg())
+      # Constants
+      of "pi": result = PI
+      of "tau": result = TAU
+      of "e": result = E
+      else: 
+        raise newException(ValueError, "Unknown function: " & funcName)
+    # Numbers (we allow things like .5)
+    elif ch in {'0'..'9', '.'}:
+      # Ugly checks to allow expressions like 10^5*5e-5
+      # Maybe there's a better way?
+      while ch in {'0'..'9', '.', 'e'} or 
+        (ch == 'e' and data[pos+1] == '-') or 
+        (data[pos-1] == 'e' and ch == '-' and data[pos+1] in {'0'..'9'}): 
+        nextChar()
+      result = 
+        if ch == '.': parseFloat("0" & data[startPos..<pos])
+        else: parseFloat(data[startPos..<pos])
+    else:
+      raise newException(ValueError, CharErrorMsg % [$ch, $pos])
+  
+  proc parseTerm: float = 
+    result = parseFactor()
+    while true:
+      if eat('*'): result *= parseFactor()
+      elif eat('/'): result /= parseFactor()
+      elif eat('%'): result = result.fmod(parseFactor())
+      elif eat('^'): result = result.pow(parseFactor())
+      else: return
 
-##  Prints debugging information on the syntax tree.
-proc te_print(n: ptr te_expr) {.importc.}
-
-##  Frees the expression.
-##  This is safe to call on NULL pointers.
-proc te_free(n: ptr te_expr) {.importc.}
-
-
-type
-  TinyexprError = object of Exception
-
-proc teInterp*(s: string): float64 = 
-  ## Parses math expression and returns float
-  ## Returns "nan" on error
-  var error: cint
-  result = te_interp(s, addr(error))
-  if error != 0:
-    const ErrorFormat = "Error code $1 while trying to interpret expression $2"
-    raise newException(TinyexprError, ErrorFormat % [$error, s])
+  proc parseExpression: float = 
+    result = parseTerm()
+    while true:
+      if eat('+'): result += parseTerm()
+      elif eat('-'): result -= parseTerm()
+      else: return
+  try:
+    result = parseExpression()
+  except OverflowError:
+    result = Inf
+  except:
+    result = NaN
 
 when isMainModule:
-  # Set our Ctrl+C hook
-  proc shutdown() {.noconv.} = 
-    echo("\nGoodbye!")
-    quit(0)
-
-  setControlCHook(shutdown)
-  # Endless loop
+  import rdstdin
   while true:
-    stdout.write("> ")
-    let 
-      # Get the expression
-      mathExpr = readLine(stdin)
-      
-    # If user wants to exit
-    if mathExpr == "exit":
+    let expr = readLineFromStdin("> ")
+    if expr in ["exit", "quit", "quit()", "exit()"]:
       quit(0)
     try:
       # Try to evaluate it
-      let result = teInterp(mathExpr)
-      echo("$1 = $2" % [mathExpr, $result])
+      let result = eval(expr)
+      echo("$1 = $2" % [expr, $result])
     except:
       echo getCurrentExceptionMsg()
       continue
-    
