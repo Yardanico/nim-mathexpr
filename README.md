@@ -17,8 +17,9 @@ echo eval("((4 - 2^3 + 1) * -sqrt(3*3+4*4)) / 2") # 7.5
 ```
 `eval` will return `NaN` if expression is invalid or cannot be evaluated!
 
-## Supported functions
-### Mathexpr has these functions implemented:
+## What is supported?
+#### You can use these operators: `+`, `-`, `/`, `*`, `%`, `^`
+### These functions are implemented:
 - `abs(x)` - the absolute value of `x`
 - `acos(x)` or `arccos(x)` - the arccosine (in radians) of `x`
 - `asin(x)` or `arcsin(x)` - the arcsine (in radians) of `x`
@@ -43,7 +44,7 @@ echo eval("((4 - 2^3 + 1) * -sqrt(3*3+4*4)) / 2") # 7.5
 - `sinh(x)` - the hyperbolic sine of `x`
 - `tan(x)` - the tangent of `x`
 - `tanh(x)` - the hyperbolic tangent of `x`
-### These constants are available:
+### Constants:
 - `pi` - The circle constant (Ludolph's number)
 - `tau` - The circle constant, equals to 2 * PI
 - `e` - Euler's number
