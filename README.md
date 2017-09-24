@@ -1,4 +1,4 @@
-# mathexpr, a math expression evaluator library in Nim [![Build Status](https://travis-ci.org/Yardanico/nim-osureplay.svg?branch=master)](https://travis-ci.org/Yardanico/nim-osureplay)
+# mathexpr, a math expression evaluator library in Nim [![Build Status](https://travis-ci.org/Yardanico/nim-mathexpr.svg?branch=master)](https://travis-ci.org/Yardanico/nim-mathexpr)
 This is a mathematic expression evaluation library in pure Nim (with no third-party dependencies) 
 
 Mathexpr code is originally based on [this](https://stackoverflow.com/a/26227947/5476128) StackOverflow answer
