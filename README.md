@@ -1,7 +1,8 @@
-# mathexpr, a math expression evaluator library in Nim [![Build Status](https://travis-ci.org/Yardanico/nim-mathexpr.svg?branch=master)](https://travis-ci.org/Yardanico/nim-mathexpr)
-This is a mathematic expression evaluation library in pure Nim (with no third-party dependencies) 
-
-Mathexpr code is originally based on [this](https://stackoverflow.com/a/26227947/5476128) StackOverflow answer
+# mathexpr, a math expression evaluator library in Nim [![nimble](https://raw.githubusercontent.com/yglukhov/nimble-tag/master/nimble_js.png)](https://github.com/yglukhov/nimble-tag)
+[![Build Status](https://travis-ci.org/Yardanico/nim-mathexpr.svg?branch=master)](https://travis-ci.org/Yardanico/nim-mathexpr)
+This is a mathematic expression evaluator library in pure Nim (with no third-party dependencies). 
+It supports many mathematical functions, also you provide variables and add custom functions.
+See `example.nim` for more info.
 
 ## Installation
 To install mathexpr, simply run:
@@ -10,12 +11,27 @@ $ nimble install mathexpr
 ```
 
 ## Documentation
-Mathexpr has only one exported procedure: `proc eval(data: string): float`
+Mathexpr has one exported procedure: `proc eval(data: string, vars: TableRef[string, float] = nil): float`:
+
 ```nim
 import mathexpr
 echo eval("((4 - 2^3 + 1) * -sqrt(3*3+4*4)) / 2") # 7.5
+echo eval("+5^+3+1.1 + a", {"a": 5.0}) # 131.1
 ```
+
+Also there's an `eval` template to simplify passing a table of variables:
+
+```nim
+import mathexpr
+# Eval template:
+eval("a + b", {"a": 1.0, "b": 2.0})
+# Eval procedure:
+import tables
+eval("a + b", {"a": 1.0, "b": 2.0}.newTable)
+```
+
 `eval` will return `NaN` if expression is invalid or cannot be evaluated!
+Also `Inf` (Infinity) can be returned if result is very big, or OverflowError happened.
 
 ## What is supported?
 #### You can use these operators: `+`, `-`, `/`, `*`, `%`, `^`

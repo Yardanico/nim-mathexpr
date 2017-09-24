@@ -1,22 +1,33 @@
-import math, strutils
+import math, strutils, tables, nimbench
+
+type
+  MathFunction* = proc(args: seq[float]): float
 
 const
-  ArgsErrorMsg = "Incorrect number of arguments at pos $1 in function `$2`"
-  CharErrorMsg = "Unexpected char `$1` at pos $2"
+  ArgsErrorMsg = "Expected $1 arguments for function `$2`, got $3"
+  CharErrorMsg = "Unexpected char $1 at pos $2"
+  UnknownIdentMsg = "Unknown function, variable or constant `$1` at pos $2"
 
-proc eval*(data: string): float = 
+var functions* = newTable[string, MathFunction]()
+
+proc eval*(data: string, vars: TableRef[string, float] = nil): float = 
   ## Evaluates math expression from string *data* and returns result as a float
+  ## Has optional *vars* argument - table of variables - string: float
   var data = data.toLowerAscii()
 
   var
-    pos = 0 ## Current position
-    ch = data[0]
+    pos = 0  ## Current position
+    ch = data[0]  ## Current char
   
   template nextChar = 
-    ## Gets next char
+    ## Increments current position and gets next char
     inc pos
     ch = data[pos]
   
+  template charError {.dirty.} = 
+    # repr(ch) instead of $ to properly handle null-terminator
+    raise newException(ValueError, CharErrorMsg % [repr(ch), $pos])
+
   proc eat(charToEat: char): bool {.inline.} = 
     ## Skips all whitespace characters, 
     ## checks if current character is *charToEat* and skips it
@@ -28,36 +39,39 @@ proc eval*(data: string): float =
   # We forward-declare these two procs because we have a recursive dependency
   proc parseExpression: float
   proc parseFactor: float
-  
-  proc parseArgumentsAux(argsNum: int): seq[float] = 
-    ## Parses any number of arguments (except 1)
-    if argsNum != -1:
-      result = newSeqOfCap[float](argsNum)
+
+  proc getArgs(argsNum = 0, funcName: string, allowZeroArgs = false): seq[float] = 
+    result = @[]
+    # If we have parens
+    if eat('('):
+      # While there are arguments left
+      while ch != ')':
+        # Parse an expression
+        result.add parseExpression()
+        # Skip ',' if we have it. With this we allow things like
+        # max(1 2 3 4) or atan2(3 5)
+        if ch == ',': nextChar()
+      # Closing paren
+      if not eat(')'):
+        charError()
     else:
-      result = newSeq[float]()
-    # No arguments at all
-    if ch != ',': return
-    while ch == ',':
-      nextChar()
-      result.add parseExpression()
-    nextChar()
-    if argsNum != -1 and argsNum != result.len:
-      # Return nothing
-      result = nil
-    
+      # Parse a factor. It can't be an expression, because this
+      # would provide wrong results: sqrt 100 * 70
+      result.add parseFactor()
+    # We check here if argsNum is provided and 
+    # it's the same as number of arguments
+    # or we have 0 arguments but allowZeroArgs is false
+    if (argsNum != 0 and result.len != argsNum) or 
+      (not allowZeroArgs and result.len == 0):
+      raise newException(
+        ValueError, ArgsErrorMsg % [$argsNum, funcName, $result.len]
+      )
+
   template getArgs(argsNum = 0, allowZeroArgs = false): untyped {.dirty.} = 
-    ## Gets all arguments for current function
-    var data = @[parseFactor()]
-    # If we need to parse more than 1 argument
-    if argsNum != 1: data.add parseArgumentsAux(argsNum - 1)
-    
-    # If number of given/needed arguments is wrong:
-    if data.isNil or (not allowZeroArgs and data.len == 0):
-      raise newException(ValueError, ArgsErrorMsg % [$pos, $funcName])
-    data
-  
-  template getArg(): untyped = 
-    getArgs(1)[0]
+    getArgs(argsNum, funcName, allowZeroArgs)
+
+  template getArg(): untyped {.dirty.} = 
+    getArgs(1, funcName)[0]
 
   proc parseFactor: float = 
     # Unary + and -
@@ -65,20 +79,29 @@ proc eval*(data: string): float =
     elif eat('-'): return -parseFactor()
     
     let startPos = pos
-
+    
     # Parentheses
     if eat('('):
-      # We allow zero number of arguments by checking for ')' here
-      if ch != ')': result = parseExpression()
-      discard eat(')')
+      result = parseExpression()
+      if not eat(')'):
+        charError()
     
     # First char in function name should be in latin alphabet
     elif ch in {'a'..'z'}:
       # Other chars can also be numerical
       while ch in {'a'..'z', '0'..'9'}: nextChar()
       let funcName = data[startPos..<pos]
+
+      # User-provided variables
+      if not vars.isNil and funcName in vars:
+        return vars[funcName]
+      
+      # User-provided functions
+      if functions.len > 0 and funcName in functions:
+        return functions[funcName](getArgs())
+
       case funcName
-      # Functions
+      # Built-in functions. Case statement is used for better performance
       of "abs": result = abs(getArg())
       of "acos", "arccos": result = arccos(getArg())
       of "asin", "arcsin": result = arcsin(getArg())
@@ -111,12 +134,13 @@ proc eval*(data: string): float =
       of "sinh": result = sinh(getArg())
       of "tan": result = tan(getArg())
       of "tanh": result = tanh(getArg())
-      # Constants
+      # Built-in constants
       of "pi": result = PI
       of "tau": result = TAU
       of "e": result = E
       else: 
-        raise newException(ValueError, "Unknown function: " & funcName)
+        raise newException(ValueError, UnknownIdentMsg % [$funcName, $pos])
+    
     # Numbers (we allow things like .5)
     elif ch in {'0'..'9', '.'}:
       # Ugly checks to allow expressions like 10^5*5e-5
@@ -129,7 +153,7 @@ proc eval*(data: string): float =
         if ch == '.': parseFloat("0" & data[startPos..<pos])
         else: parseFloat(data[startPos..<pos])
     else:
-      raise newException(ValueError, CharErrorMsg % [$ch, $pos])
+      charError()
   
   proc parseTerm: float = 
     result = parseFactor()
@@ -146,9 +170,15 @@ proc eval*(data: string): float =
       if eat('+'): result += parseTerm()
       elif eat('-'): result -= parseTerm()
       else: return
+  
   try:
     result = parseExpression()
   except OverflowError:
-    result = Inf
-  except:
-    result = NaN
+    return Inf
+  # If we didn't process some characters in string
+  if pos < data.len:
+    charError()
+
+template eval*(data: string, vars: openarray[tuple[key, val: typed]]): float = 
+  ## Template which automatically converts *vars* openarray to table 
+  eval(data, vars.newTable)
