@@ -15,15 +15,17 @@ Mathexpr has only one exported procedure: `proc eval(data: string): float`
 import mathexpr
 echo eval("((4 - 2^3 + 1) * -sqrt(3*3+4*4)) / 2") # 7.5
 ```
+`eval` will return `NaN` if expression is invalid or cannot be evaluated!
+
 ## Supported functions
 ### Mathexpr has these functions implemented:
 - `abs(x)` - the absolute value of `x`
 - `acos(x)` or `arccos(x)` - the arccosine (in radians) of `x`
 - `asin(x)` or `arcsin(x)` - the arcsine (in radians) of `x`
-- `atan(x)` or `arctan(x)` - the arctangent (in radians) of `x`
+- `atan(x)` or `arctan(x)` or `arctg(x)` - the arctangent (in radians) of `x`
 - `atan2(x, y)` or `arctan2(x, y)` - the arctangent of the quotient from provided `x` and `y`
 - `ceil(x)` - the smallest integer greater than or equal to `x`
-- `cos(x)` - the cosine of of `x`
+- `cos(x)` - the cosine of `x`
 - `cosh(x)` - the hyperbolic cosine of `x`
 - `exp(x)` - the exponential function of `x`
 - `sqrt(x)` - the square root of `x`

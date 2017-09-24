@@ -83,7 +83,7 @@ proc eval*(data: string): float =
       of "abs": result = abs(getArg())
       of "acos", "arccos": result = arccos(getArg())
       of "asin", "arcsin": result = arcsin(getArg())
-      of "atan", "arctan": result = arctan(getArg())
+      of "atan", "arctan", "arctg": result = arctan(getArg())
       of "atan2", "arctan2":
         let args = getArgs(2)
         result = arctan2(args[0], args[1])
@@ -153,17 +153,3 @@ proc eval*(data: string): float =
     result = Inf
   except:
     result = NaN
-
-when isMainModule:
-  import rdstdin
-  while true:
-    let expr = readLineFromStdin("> ")
-    if expr in ["exit", "quit", "quit()", "exit()"]:
-      quit(0)
-    try:
-      # Try to evaluate it
-      let result = eval(expr)
-      echo("$1 = $2" % [expr, $result])
-    except:
-      echo getCurrentExceptionMsg()
-      continue

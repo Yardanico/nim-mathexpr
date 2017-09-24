@@ -4,7 +4,7 @@ version       = "1.0.0"
 author        = "Daniil Yarancev"
 description   = "MathExpr - tiny mathematical expression evaluator library"
 license       = "MIT"
-skipFiles     = @["tests.nim"]
+skipFiles     = @["tests.nim", "example.nim"]
 # Dependencies
 
 requires "nim >= 0.17.0"
