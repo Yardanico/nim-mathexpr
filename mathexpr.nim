@@ -73,7 +73,6 @@ proc eval*(data: string): float =
       discard eat(')')
     
     # First char in function name should be in latin alphabet
-    
     elif ch in {'a'..'z'}:
       # Other chars can also be numerical
       while ch in {'a'..'z', '0'..'9'}: nextChar()

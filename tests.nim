@@ -50,8 +50,6 @@ const
 
     ("log10 1000", 3.0),
     ("log10 1e3", 3.0),
-    ("log10 1000", 3.0),
-    ("log10 1e3", 3.0),
     ("log10(1000)", 3.0),
     ("log10(1e3)", 3.0),
     ("log10 1.0e3", 3.0),
@@ -150,24 +148,24 @@ proc `~=`(a, b: float): bool =
 suite "Eval test cases":
   for data in TestCases:
     let (expr, expected) = data
-    test expr:
+    test(expr & " == " & $expected):
       check eval(expr) ~= expected
   
   for expr in Infs:
-    test expr:
+    test(expr & " == Infinity"):
       check abs(eval(expr)) == Inf
   
   for data in Pows:
     let (first, second) = data
-    test first:
+    test(first & " == " & second):
       let (a, b) = (eval(first), eval(second))
       check a == b
   
   for expr in NaNs:
-    test expr:
+    test(expr & " == " & "NaN"):
       check(eval(expr).classify == fcNan)
   
   for data in Combinatorics:
     let (expr, expected) = data
-    test expr:
+    test(expr & " == " & $expected):
       check eval(expr) ~= expected
