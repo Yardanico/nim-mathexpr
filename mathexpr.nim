@@ -160,7 +160,13 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
     while true:
       if eat('*'): result *= parseFactor()
       elif eat('/'): result /= parseFactor()
-      elif eat('%'): result = result.fmod(parseFactor())
+      elif eat('%'):
+        let val = parseFactor()
+        result = 
+          when defined(JS):
+            result - val * floor(result / val)
+          else:
+            result.fmod(val)
       elif eat('^'): result = result.pow(parseFactor())
       else: return
 
