@@ -1,4 +1,4 @@
-import math, strutils, tables, nimbench
+import math, strutils, tables
 
 type
   MathFunction* = proc(args: seq[float]): float
