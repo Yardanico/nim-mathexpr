@@ -169,3 +169,20 @@ suite "Eval test cases":
     let (expr, expected) = data
     test(expr & " == " & $expected):
       check eval(expr) ~= expected
+
+suite "Custom functions/variables":
+  test "Custom function":
+    proc myData(args: seq[float]): float = 
+      for arg in args: result += arg * 2
+  
+    functions["test"] = myData
+
+    check eval(
+      "test(1, 2, 3, 4, 5) + 35 - 27"
+    ) == (myData(@[1.0, 2, 3, 4, 5]) + 35 - 27)
+  
+  test "Custom variables":
+    check eval(
+      "x + y - fac(z)", 
+      {"x": 5.0, "y": 36511.0, "z": 5.0}
+    ) == (5.0 + 36511 - 120)

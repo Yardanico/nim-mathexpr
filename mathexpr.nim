@@ -1,10 +1,12 @@
 import math, strutils, tables
+export tables
 
 type
-  MathFunction* = proc(args: seq[float]): float
+  MathFunction = proc(args: seq[float]): float
 
 const
   ArgsErrorMsg = "Expected $1 arguments for function `$2`, got $3"
+  AtLeastErrorMsg = "Function `$1` accepts at least one argument, got 0"
   CharErrorMsg = "Unexpected char $1 at pos $2"
   UnknownIdentMsg = "Unknown function, variable or constant `$1` at pos $2"
 
@@ -13,7 +15,8 @@ var functions* = newTable[string, MathFunction]()
 proc eval*(data: string, vars: TableRef[string, float] = nil): float = 
   ## Evaluates math expression from string *data* and returns result as a float
   ## Has optional *vars* argument - table of variables - string: float
-  var data = data.toLowerAscii()
+  let hasVars = (not vars.isNil) and vars.len > 0
+  let hasFuncs = functions.len > 0
 
   var
     pos = 0  ## Current position
@@ -40,7 +43,7 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
   proc parseExpression: float
   proc parseFactor: float
 
-  proc getArgs(argsNum = 0, funcName: string, allowZeroArgs = false): seq[float] = 
+  proc getArgs(args = 0, funcName: string, zeroArgs = false): seq[float] = 
     result = @[]
     # If we have parens
     if eat('('):
@@ -58,17 +61,18 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
       # Parse a factor. It can't be an expression, because this
       # would provide wrong results: sqrt 100 * 70
       result.add parseFactor()
-    # We check here if argsNum is provided and 
+    # We check here if args count is provided and
     # it's the same as number of arguments
-    # or we have 0 arguments but allowZeroArgs is false
-    if (argsNum != 0 and result.len != argsNum) or 
-      (not allowZeroArgs and result.len == 0):
+    # or we have 0 arguments but we don't allow zero arguments
+    if (args != 0 and result.len != args):
       raise newException(
-        ValueError, ArgsErrorMsg % [$argsNum, funcName, $result.len]
+        ValueError, ArgsErrorMsg % [$args, funcName, $result.len]
       )
+    elif (not zeroArgs and result.len == 0):
+      raise newException(ValueError, AtLeastErrorMsg % [funcName])
 
-  template getArgs(argsNum = 0, allowZeroArgs = false): untyped {.dirty.} = 
-    getArgs(argsNum, funcName, allowZeroArgs)
+  template getArgs(argsNum = 0, zeroArgs = false): untyped {.dirty.} = 
+    getArgs(argsNum, funcName, zeroArgs)
 
   template getArg(): untyped {.dirty.} = 
     getArgs(1, funcName)[0]
@@ -85,20 +89,20 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
       result = parseExpression()
       if not eat(')'):
         charError()
-    
-    # First char in function name should be in latin alphabet
-    elif ch in {'a'..'z'}:
-      # Other chars can also be numerical
-      while ch in {'a'..'z', '0'..'9'}: nextChar()
+
+    elif ch in IdentStartChars:
+      while ch in IdentChars: nextChar()
       let funcName = data[startPos..<pos]
 
       # User-provided variables
-      if not vars.isNil and funcName in vars:
-        return vars[funcName]
+      if hasVars:
+        let data = vars.getOrDefault(funcName)
+        if data != 0.0: return data
       
       # User-provided functions
-      if functions.len > 0 and funcName in functions:
-        return functions[funcName](getArgs())
+      if hasFuncs:
+        let data = functions.getOrDefault(funcName)
+        if not data.isNil: return data(getArgs())
 
       case funcName
       # Built-in functions. Case statement is used for better performance
@@ -114,6 +118,7 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
       of "cosh": result = cosh(getArg())
       of "exp": result = exp(getArg())
       of "sqrt": result = sqrt(getArg())
+      of "sum": result = sum(getArgs())
       of "fac": result = float fac(int(getArg()))
       of "floor": result = floor(getArg())
       of "ln": result = ln(getArg())
