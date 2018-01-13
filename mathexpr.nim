@@ -31,13 +31,15 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
     # repr(ch) instead of $ to properly handle null-terminator
     raise newException(ValueError, CharErrorMsg % [repr(ch), $pos])
 
-  proc eat(charToEat: char): bool {.inline.} = 
+  template eat(charToEat: char): bool = 
     ## Skips all whitespace characters, 
     ## checks if current character is *charToEat* and skips it
     while ch in Whitespace: nextChar()
     if ch == charToEat: 
       nextChar()
-      result = true
+      true
+    else:
+      false
   
   # We forward-declare these two procs because we have a recursive dependency
   proc parseExpression: float
