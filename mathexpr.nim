@@ -106,47 +106,51 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
         let data = functions.getOrDefault(funcName)
         if not data.isNil: return data(getArgs())
 
-      case funcName
-      # Built-in functions. Case statement is used for better performance
-      of "abs": result = abs(getArg())
-      of "acos", "arccos": result = arccos(getArg())
-      of "asin", "arcsin": result = arcsin(getArg())
-      of "atan", "arctan", "arctg": result = arctan(getArg())
-      of "atan2", "arctan2":
-        let args = getArgs(2)
-        result = arctan2(args[0], args[1])
-      of "ceil": result = ceil(getArg())
-      of "cos": result = cos(getArg())
-      of "cosh": result = cosh(getArg())
-      of "exp": result = exp(getArg())
-      of "sqrt": result = sqrt(getArg())
-      of "sum": result = sum(getArgs())
-      of "fac": result = float fac(int(getArg()))
-      of "floor": result = floor(getArg())
-      of "ln": result = ln(getArg())
-      of "log", "log10": result = log10(getArg())
-      of "log2": result = log2(getArg())
-      of "max": result = max(getArgs())
-      of "min": result = min(getArgs())
-      of "ncr", "binom": 
-        let args = getArgs(2)
-        result = float binom(int args[0], int args[1])
-      of "npr":
-        let args = getArgs(2)
-        result = float binom(int args[0], int args[1]) * fac(int args[1])
-      of "pow":
-        let args = getArgs(2)
-        result = pow(args[0], args[1])
-      of "sin": result = sin(getArg())
-      of "sinh": result = sinh(getArg())
-      of "tan": result = tan(getArg())
-      of "tanh": result = tanh(getArg())
-      # Built-in constants
-      of "pi": result = PI
-      of "tau": result = TAU
-      of "e": result = E
-      else: 
-        raise newException(ValueError, UnknownIdentMsg % [$funcName, $pos])
+      result = 
+        case funcName
+        of "abs": abs(getArg())
+        of "acos", "arccos": arccos(getArg())
+        of "asin", "arcsin": arcsin(getArg())
+        of "atan", "arctan", "arctg": arctan(getArg())
+        of "atan2", "arctan2":
+          let args = getArgs(2)
+          arctan2(args[0], args[1])
+        of "ceil": ceil(getArg())
+        of "cos": cos(getArg())
+        of "cosh": cosh(getArg())
+        of "deg": radToDeg(getArg())
+        of "exp": exp(getArg())
+        of "sqrt": sqrt(getArg())
+        of "sum": sum(getArgs())
+        of "fac": float fac(int(getArg()))
+        of "floor": floor(getArg())
+        of "ln": ln(getArg())
+        of "log", "log10": log10(getArg())
+        of "log2": log2(getArg())
+        of "max": max(getArgs())
+        of "min": min(getArgs())
+        of "ncr", "binom": 
+          let args = getArgs(2)
+          float binom(int args[0], int args[1])
+        of "npr":
+          let args = getArgs(2)
+          float binom(int args[0], int args[1]) * fac(int args[1])
+        of "rad": degToRad(getArg())
+        of "pow":
+          let args = getArgs(2)
+          pow(args[0], args[1])
+        of "sin": sin(getArg())
+        of "sinh": sinh(getArg())
+        of "tan": tan(getArg())
+        of "tanh": tanh(getArg())
+        # Built-in constants
+        of "pi": PI
+        of "tau": TAU
+        of "e": E
+        else: 
+          raise newException(ValueError, UnknownIdentMsg % [$funcName, $pos])
+      # Round to 8 places so we don't get results like 0.499999 instead of 0.5 
+      result = round(result, 8)
     
     # Numbers (we allow things like .5)
     elif ch in {'0'..'9', '.'}:
@@ -193,6 +197,6 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
   if pos < data.len:
     charError()
 
-template eval*(data: string, vars: openarray[tuple[key, val: typed]]): float = 
+template eval*(data: string, vars: openArray[tuple[key, val: typed]]): float = 
   ## Template which automatically converts *vars* openarray to table 
   eval(data, vars.newTable)
