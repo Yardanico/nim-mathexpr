@@ -2,7 +2,7 @@
 import strutils, rdstdin, ./mathexpr, tables
 
 # Our variables (they will be available in the REPL)
-var ourVars = {"x": 5.0, "y": 6.0, "z": 75.0, "fooBar_123": 1337.0}.newTable()
+var ourVars = {"x": 5.0, "y": 6.0, "z": 75.0, "fooBar_123": 1337.0}.toTable()
 
 #[
   You can define custom procedures, which will be available to any
@@ -14,7 +14,6 @@ var ourVars = {"x": 5.0, "y": 6.0, "z": 75.0, "fooBar_123": 1337.0}.newTable()
   Try to call this "work" function like this:
   work(fooBar_123, x, y, z, 1234)
 ]#
-
 
 proc myFunc(args: seq[float]): float =
   result = 25
@@ -41,3 +40,4 @@ while true:
   except:
     echo "Error: ", getCurrentExceptionMsg()
     continue
+

@@ -1,5 +1,4 @@
 import math, strutils, tables
-export tables
 
 type
   MathFunction = proc(args: seq[float]): float
@@ -10,13 +9,47 @@ const
   CharErrorMsg = "Unexpected char $1 at pos $2"
   UnknownIdentMsg = "Unknown function, variable or constant `$1` at pos $2"
 
-var functions* = newTable[string, MathFunction]()
 
-proc eval*(data: string, vars: TableRef[string, float] = nil): float = 
+# TODO: Make a PR to Nim stdlib
+when defined(JS):
+  proc fmod(a, b: float): float = 
+    asm """`a` % `b`"""
+
+var funcs = newTable[string, MathFunction]()
+proc addFunc*(name: string, fun: MathFunction) = 
+  ## Adds custom function *fun* named *name* which will be available inside of
+  ## a mathematical expression passed to eval()
+  ##
+  ## You can use any valid Nim code inside of a custom function, but it must
+  ## accept sequence of floats and return a single float
+  runnableExamples:
+    proc add2(args: seq[float]): float = 
+      args[0] + 2
+
+    addFunc("add2", add2)
+    doAssert eval("add2(4)") == 6.0
+  funcs[name] = fun
+
+var defaultTable: Table[string, float]
+
+proc eval*(data: string, vars = defaultTable): float = 
   ## Evaluates math expression from string *data* and returns result as a float
-  ## Has optional *vars* argument - table of variables - string: float
-  let hasVars = (not vars.isNil) and vars.len > 0
-  let hasFuncs = functions.len > 0
+  ##
+  ## Has optional *vars* argument - table of variables which can be used inside
+  ## of a math expression
+  runnableExamples:
+    # You don't need `tables` module if you only use eval() template or you 
+    # don't use custom variables at all
+    import tables 
+
+    # By default trigonometric functions in mathexpr operate on radians, like
+    # in Nim's `math` stdlib module
+    doAssert eval("cos(pi)*sin(pi)") == 0
+    
+    let vars = {"a": 5.0, "b": 7.0}.toTable()
+    doAssert eval("a+b", vars) == 12.0
+  let hasVars = vars.len > 0
+  let hasFuncs = funcs.len > 0
 
   var
     pos = 0  ## Current position
@@ -103,54 +136,53 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
       
       # User-provided functions
       if hasFuncs:
-        let data = functions.getOrDefault(funcName)
+        let data = funcs.getOrDefault(funcName)
         if not data.isNil: return data(getArgs())
 
-      result = 
-        case funcName
-        of "abs": abs(getArg())
-        of "acos", "arccos": arccos(getArg())
-        of "asin", "arcsin": arcsin(getArg())
-        of "atan", "arctan", "arctg": arctan(getArg())
-        of "atan2", "arctan2":
-          let args = getArgs(2)
-          arctan2(args[0], args[1])
-        of "ceil": ceil(getArg())
-        of "cos": cos(getArg())
-        of "cosh": cosh(getArg())
-        of "deg": radToDeg(getArg())
-        of "exp": exp(getArg())
-        of "sqrt": sqrt(getArg())
-        of "sum": sum(getArgs())
-        of "fac": float fac(int(getArg()))
-        of "floor": floor(getArg())
-        of "ln": ln(getArg())
-        of "log", "log10": log10(getArg())
-        of "log2": log2(getArg())
-        of "max": max(getArgs())
-        of "min": min(getArgs())
-        of "ncr", "binom": 
-          let args = getArgs(2)
-          float binom(int args[0], int args[1])
-        of "npr":
-          let args = getArgs(2)
-          float binom(int args[0], int args[1]) * fac(int args[1])
-        of "rad": degToRad(getArg())
-        of "pow":
-          let args = getArgs(2)
-          pow(args[0], args[1])
-        of "sin": sin(getArg())
-        of "sinh": sinh(getArg())
-        of "tan": tan(getArg())
-        of "tanh": tanh(getArg())
-        # Built-in constants
-        of "pi": PI
-        of "tau": TAU
-        of "e": E
-        else: 
-          raise newException(ValueError, UnknownIdentMsg % [$funcName, $pos])
+      result = case funcName:
+      of "abs": abs(getArg())
+      of "acos", "arccos": arccos(getArg())
+      of "asin", "arcsin": arcsin(getArg())
+      of "atan", "arctan", "arctg": arctan(getArg())
+      of "atan2", "arctan2":
+        let args = getArgs(2)
+        arctan2(args[0], args[1])
+      of "ceil": ceil(getArg())
+      of "cos": cos(getArg())
+      of "cosh": cosh(getArg())
+      of "deg": radToDeg(getArg())
+      of "exp": exp(getArg())
+      of "sqrt": sqrt(getArg())
+      of "sum": sum(getArgs())
+      of "fac": float fac(int(getArg()))
+      of "floor": floor(getArg())
+      of "ln": ln(getArg())
+      of "log", "log10": log10(getArg())
+      of "log2": log2(getArg())
+      of "max": max(getArgs())
+      of "min": min(getArgs())
+      of "ncr", "binom": 
+        let args = getArgs(2)
+        float binom(int args[0], int args[1])
+      of "npr":
+        let args = getArgs(2)
+        float binom(int args[0], int args[1]) * fac(int args[1])
+      of "rad": degToRad(getArg())
+      of "pow":
+        let args = getArgs(2)
+        pow(args[0], args[1])
+      of "sin": sin(getArg())
+      of "sinh": sinh(getArg())
+      of "tan": tan(getArg())
+      of "tanh": tanh(getArg())
+      # Built-in constants
+      of "pi": PI
+      of "tau": TAU
+      of "e": E
+      else: 
+        raise newException(ValueError, UnknownIdentMsg % [$funcName, $pos])
       # Round to 8 places so we don't get results like 0.499999 instead of 0.5 
-      result = round(result, 8)
+      result = round(result, 10)
     
     # Numbers (we allow things like .5)
     elif ch in {'0'..'9', '.'}:
@@ -171,14 +203,7 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
     while true:
       if eat('*'): result *= parseFactor()
       elif eat('/'): result /= parseFactor()
-      elif eat('%'):
-        let val = parseFactor()
-        when defined(JS):
-          proc fmod(a, b: float): float = 
-            asm """
-            `result` = `a` % `b`;
-            """
-        result = result.fmod(val)
+      elif eat('%'): result = result.fmod(parseFactor())
       elif eat('^'): result = result.pow(parseFactor())
       else: return
 
@@ -197,6 +222,12 @@ proc eval*(data: string, vars: TableRef[string, float] = nil): float =
   if pos < data.len:
     charError()
 
-template eval*(data: string, vars: openArray[tuple[key, val: typed]]): float = 
-  ## Template which automatically converts *vars* openarray to table 
-  eval(data, vars.newTable)
+
+template eval*(data: string, vars: openArray[(string, float)]): float = 
+  ## Template which automatically converts *vars* openarray to a Table
+  ## so you don't need to import and use `tables` module yourself.
+  runnableExamples:
+    doAssert eval("a+b*2", {"a": 5.0, "b": 3.0}) == 11.0
+  
+  mixin toTable
+  eval(data, vars.toTable())

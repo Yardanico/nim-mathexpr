@@ -31,7 +31,7 @@ eval("a + b", {"a": 1.0, "b": 2.0}.newTable)
 ```
 
 `eval` will return `NaN` if expression is invalid or cannot be evaluated!
-Also `Inf` (Infinity) can be returned if result is very big, or OverflowError happened.
+Also `Inf` (Infinity) can be returned if result is very big, or if OverflowError happened.
 
 ## What is supported?
 #### You can use these operators: `+`, `-`, `/`, `*`, `%`, `^`
@@ -62,5 +62,5 @@ Also `Inf` (Infinity) can be returned if result is very big, or OverflowError ha
 - `tanh(x)` - the hyperbolic tangent of `x`
 ### Constants:
 - `pi` - The circle constant (Ludolph's number)
-- `tau` - The circle constant, equals to 2 * PI
+- `tau` - The circle constant, equals to `2 * pi`
 - `e` - Euler's number
