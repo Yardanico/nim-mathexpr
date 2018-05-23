@@ -1,6 +1,6 @@
 # Package
 
-version       = "1.1.2"
+version       = "1.1.3"
 author        = "Daniil Yarancev"
 description   = "MathExpr - tiny mathematical expression evaluator library"
 license       = "MIT"
