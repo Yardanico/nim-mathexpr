@@ -16,6 +16,7 @@ when defined(JS):
     asm """`a` % `b`"""
 
 var funcs = newTable[string, MathFunction]()
+
 proc addFunc*(name: string, fun: MathFunction) = 
   ## Adds custom function *fun* named *name* which will be available inside of
   ## a mathematical expression passed to eval()
@@ -48,9 +49,12 @@ proc eval*(data: string, vars = defaultTable): float =
     
     let vars = {"a": 5.0, "b": 7.0}.toTable()
     doAssert eval("a+b", vars) == 12.0
-  let hasVars = vars.len > 0
-  let hasFuncs = funcs.len > 0
-
+  
+  let 
+    hasVars = vars.len > 0
+    hasFuncs = funcs.len > 0
+    maxPos = data.len
+  
   var
     pos = 0  ## Current position
     ch = data[0]  ## Current char
@@ -58,21 +62,22 @@ proc eval*(data: string, vars = defaultTable): float =
   template nextChar = 
     ## Increments current position and gets next char
     inc pos
-    ch = data[pos]
+    # Check if string ended
+    if pos == maxPos: ch = '\0'
+    else: ch = data[pos]
   
-  template charError {.dirty.} = 
-    # repr(ch) instead of $ to properly handle null-terminator
-    raise newException(ValueError, CharErrorMsg % [repr(ch), $pos])
+  template charError = 
+    raise newException(ValueError, CharErrorMsg % [$ch, $pos])
 
   template eat(charToEat: char): bool = 
-    ## Skips all whitespace characters, 
-    ## checks if current character is *charToEat* and skips it
+    ## Skips all whitespace characters and checks if 
+    ## current character is *charToEat*. If so, gets the next char 
+    ## and returns true
     while ch in Whitespace: nextChar()
     if ch == charToEat: 
       nextChar()
       true
-    else:
-      false
+    else: false
   
   # We forward-declare these two procs because we have a recursive dependency
   proc parseExpression: float
@@ -80,16 +85,13 @@ proc eval*(data: string, vars = defaultTable): float =
 
   proc getArgs(args = 0, funcName: string, zeroArgs = false): seq[float] = 
     result = @[]
-    # If we have parens
     if eat('('):
       # While there are arguments left
       while ch != ')':
-        # Parse an expression
         result.add parseExpression()
         # Skip ',' if we have it. With this we allow things like
         # max(1 2 3 4) or atan2(3 5)
         if ch == ',': nextChar()
-      # Closing paren
       if not eat(')'):
         charError()
     else:
@@ -119,7 +121,6 @@ proc eval*(data: string, vars = defaultTable): float =
     
     let startPos = pos
     
-    # Parentheses
     if eat('('):
       result = parseExpression()
       if not eat(')'):
@@ -129,12 +130,10 @@ proc eval*(data: string, vars = defaultTable): float =
       while ch in IdentChars: nextChar()
       let funcName = data[startPos..<pos]
 
-      # User-provided variables
       if hasVars:
         let data = vars.getOrDefault(funcName)
         if data != 0.0: return data
       
-      # User-provided functions
       if hasFuncs:
         let data = funcs.getOrDefault(funcName)
         if not data.isNil: return data(getArgs())
@@ -181,7 +180,7 @@ proc eval*(data: string, vars = defaultTable): float =
       of "e": E
       else: 
         raise newException(ValueError, UnknownIdentMsg % [$funcName, $pos])
-      # Round to 8 places so we don't get results like 0.499999 instead of 0.5 
+      # Round to 10 places so we don't get results like 0.499999 instead of 0.5 
       result = round(result, 10)
     
     # Numbers (we allow things like .5)
@@ -218,10 +217,9 @@ proc eval*(data: string, vars = defaultTable): float =
     result = parseExpression()
   except OverflowError:
     return Inf
-  # If we didn't process some characters in string
+  # If we didn't run through the whole string for some reason
   if pos < data.len:
     charError()
-
 
 template eval*(data: string, vars: openArray[(string, float)]): float = 
   ## Template which automatically converts *vars* openarray to a Table
