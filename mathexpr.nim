@@ -1,4 +1,4 @@
-import math, strutils, tables
+import math, strutils, parseutils, tables
 
 type
   MathFunction = proc(args: seq[float]): float
@@ -9,10 +9,9 @@ const
   CharErrorMsg = "Unexpected char $1 at pos $2"
   UnknownIdentMsg = "Unknown function, variable or constant `$1` at pos $2"
 
-
 # TODO: Make a PR to Nim stdlib
 when defined(JS):
-  proc fmod(a, b: float): float = 
+  proc `mod`(a, b: float): float = 
     asm """`a` % `b`"""
 
 var funcs = newTable[string, MathFunction]()
@@ -57,7 +56,7 @@ proc eval*(data: string, vars = defaultTable): float =
   
   var
     pos = 0  ## Current position
-    ch = data[0]  ## Current char
+    ch = data[0]  ## Current character
   
   template nextChar = 
     ## Increments current position and gets next char
@@ -66,6 +65,10 @@ proc eval*(data: string, vars = defaultTable): float =
     if pos == maxPos: ch = '\0'
     else: ch = data[pos]
   
+  template setChar = 
+    ## Set ch to current position in string if it's not the last characters
+    if pos < data.len: ch = data[pos]
+
   template charError = 
     raise newException(ValueError, CharErrorMsg % [$ch, $pos])
 
@@ -73,8 +76,9 @@ proc eval*(data: string, vars = defaultTable): float =
     ## Skips all whitespace characters and checks if 
     ## current character is *charToEat*. If so, gets the next char 
     ## and returns true
-    while ch in Whitespace: nextChar()
-    if ch == charToEat: 
+    pos += skipWhitespace(data, pos)
+    setChar()
+    if ch == charToEat:
       nextChar()
       true
     else: false
@@ -95,7 +99,7 @@ proc eval*(data: string, vars = defaultTable): float =
       if not eat(')'):
         charError()
     else:
-      # Parse a factor. It can't be an expression, because this
+      # Parse a factor. It can't be an expression because this
       # would provide wrong results: sqrt 100 * 70
       result.add parseFactor()
     # We check here if args count is provided and
@@ -127,8 +131,9 @@ proc eval*(data: string, vars = defaultTable): float =
         charError()
 
     elif ch in IdentStartChars:
-      while ch in IdentChars: nextChar()
-      let funcName = data[startPos..<pos]
+      var funcName: string
+      pos += parseIdent(data, funcName, pos)
+      setChar()
 
       if hasVars:
         let data = vars.getOrDefault(funcName)
@@ -136,7 +141,7 @@ proc eval*(data: string, vars = defaultTable): float =
       
       if hasFuncs:
         let data = funcs.getOrDefault(funcName)
-        if not data.isNil: return data(getArgs())
+        if not data.isNil(): return data(getArgs())
 
       result = case funcName:
       of "abs": abs(getArg())
@@ -180,29 +185,23 @@ proc eval*(data: string, vars = defaultTable): float =
       of "e": E
       else: 
         raise newException(ValueError, UnknownIdentMsg % [$funcName, $pos])
-      # Round to 10 places so we don't get results like 0.499999 instead of 0.5 
-      result = round(result, 10)
-    
-    # Numbers (we allow things like .5)
+      
+    # Numbers ('.' is for numbers like '.5')
     elif ch in {'0'..'9', '.'}:
-      # Ugly checks to allow expressions like 10^5*5e-5
-      # Maybe there's a better way?
-      while ch in {'0'..'9', '.', 'e'} or 
-        (ch == 'e' and data[pos+1] == '-') or 
-        (data[pos-1] == 'e' and ch == '-' and data[pos+1] in {'0'..'9'}): 
-        nextChar()
-      result = 
-        if ch == '.': parseFloat("0" & data[startPos..<pos])
-        else: parseFloat(data[startPos..<pos])
+      let skipped = parseFloat(data, result, pos)
+      if skipped == 0: charError()
+
+      pos += skipped
+      setChar()
     else:
       charError()
-  
+
   proc parseTerm: float = 
     result = parseFactor()
     while true:
       if eat('*'): result *= parseFactor()
       elif eat('/'): result /= parseFactor()
-      elif eat('%'): result = result.fmod(parseFactor())
+      elif eat('%'): result = result.mod(parseFactor())
       elif eat('^'): result = result.pow(parseFactor())
       else: return
 
@@ -215,9 +214,11 @@ proc eval*(data: string, vars = defaultTable): float =
   
   try:
     result = parseExpression()
+    # Round to 10 places so we don't get results like 0.499999 instead of 0.5 
+    result = round(result, 10)
   except OverflowError:
     return Inf
-  # If we didn't run through the whole string for some reason
+  # If we didn't process all characters in the string
   if pos < data.len:
     charError()
 
