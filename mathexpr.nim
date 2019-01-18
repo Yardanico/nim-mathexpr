@@ -1,4 +1,4 @@
-import math, strutils, parseutils, tables
+import math, strformat, strutils, parseutils, tables
 
 type
   MathFunction = proc(args: seq[float]): float
@@ -123,8 +123,6 @@ proc eval*(data: string, vars = defaultTable): float =
     if eat('+'): return parseFactor()
     elif eat('-'): return -parseFactor()
     
-    let startPos = pos
-    
     if eat('('):
       result = parseExpression()
       if not eat(')'):
@@ -214,8 +212,6 @@ proc eval*(data: string, vars = defaultTable): float =
   
   try:
     result = parseExpression()
-    # Round to 10 places so we don't get results like 0.499999 instead of 0.5 
-    result = round(result, 10)
   except OverflowError:
     return Inf
   # If we didn't process all characters in the string
