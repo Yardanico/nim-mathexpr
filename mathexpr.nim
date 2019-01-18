@@ -1,4 +1,4 @@
-import math, strformat, strutils, parseutils, tables
+import math, strutils, parseutils, tables
 
 type
   MathFunction = proc(args: seq[float]): float
