@@ -22,7 +22,7 @@ echo eval("+5^+3+1.1 + a", {"a": 5.0}) # 131.1
 Also there's an `eval` template to simplify passing a table of variables:
 
 ```nim
-import mathexpr
+import mathexpr, tables
 # Eval template:
 eval("a + b", {"a": 1.0, "b": 2.0})
 # Eval procedure:

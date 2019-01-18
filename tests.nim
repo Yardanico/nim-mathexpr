@@ -1,4 +1,4 @@
-import ./mathexpr, unittest, math, strformat
+import ./mathexpr, unittest, math, strformat, tables
 const
   TestCases = [
     ("1", 1.0),

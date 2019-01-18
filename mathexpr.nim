@@ -224,5 +224,4 @@ template eval*(data: string, vars: openArray[(string, float)]): float =
   runnableExamples:
     doAssert eval("a+b*2", {"a": 5.0, "b": 3.0}) == 11.0
   
-  mixin toTable
   eval(data, vars.toTable())
