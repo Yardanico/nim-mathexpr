@@ -1,5 +1,5 @@
 import math, tables
-import mathexpr/[types, expr_eval]
+import ./mathexpr/[types, expr_eval]
 
 proc newEvaluator*: Evaluator =
   Evaluator(
