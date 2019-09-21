@@ -1,8 +1,7 @@
 # mathexpr, a math expression evaluator library in Nim [![nimble](https://raw.githubusercontent.com/yglukhov/nimble-tag/master/nimble_js.png)](https://github.com/yglukhov/nimble-tag)
 [![Build Status](https://travis-ci.org/Yardanico/nim-mathexpr.svg?branch=master)](https://travis-ci.org/Yardanico/nim-mathexpr)
-This is a mathematic expression evaluator library in pure Nim (with no third-party dependencies). 
-It supports many mathematical functions, also you provide variables and add custom functions.
-See `example.nim` for more info.
+Mathexpr is a relatively small mathematical expression evaluator library written in Nim without any third-party dependencies. 
+It has a lot of predefined math functions and some constants, and you can also define your own.
 
 ## Installation
 To install mathexpr, simply run:
@@ -11,31 +10,46 @@ $ nimble install mathexpr
 ```
 
 ## Documentation
-Mathexpr has one exported procedure: `proc eval(data: string, vars: TableRef[string, float] = nil): float`:
+Mathexpr has a main Evaluator type, which you should use for evaluating math expressions:
 
 ```nim
 import mathexpr
-echo eval("((4 - 2^3 + 1) * -sqrt(3*3+4*4)) / 2") # 7.5
-echo eval("+5^+3+1.1 + a", {"a": 5.0}) # 131.1
+let e = newEvaluator()
+
+echo e.eval("((4 - 2^3 + 1) * -sqrt(3*3+4*4)) / 2") # 7.5
+echo e.eval("+5^+3+1.1 + a", {"a": 5.0}) # 131.1
+# Add some variables to our Evaluator object
+e.addVars({"a": 1.0, "b": 2.0})
+echo e.eval("a + b") # 3
+
+# Define our custom function which returns 
+# 25 multiplied by all arguments it got
+proc myFunc(args: seq[float]): float =
+  result = 25
+  for arg in args:
+    result *= arg
+
+
+e.addFunc("work", myFunc)
+echo e.eval("work(1, 2, 3) + 5") # 25*1*2*3 + 5 = 155
+
+# In some places parenthesis and commas are optional:
+echo e.eval("work(1 2 3) + 5") # 155
+echo e.eval("sqrt 100 + 5") 
 ```
 
-Also there's an `eval` template to simplify passing a table of variables:
+`eval` can raise an exception. All possible exceptions:
+- `EmptyInput` - raised when the input line is empty
+- `UnbalancedParenthesis` - raised when the number of opening/closing parenthesis is not the same
+- `UnexpectedCharacter` - raised when the evaluator encounters an unknown character
+- `UnknownIdent` - raised when the parsed ident (function or variable name) is not defined
+- `OverflowError` - happens when an overflow occured
 
-```nim
-import mathexpr, tables
-# Eval template:
-eval("a + b", {"a": 1.0, "b": 2.0})
-# Eval procedure:
-import tables
-eval("a + b", {"a": 1.0, "b": 2.0}.newTable)
-```
-
-`eval` will return `NaN` if expression is invalid or cannot be evaluated!
-Also `Inf` (Infinity) can be returned if result is very big, or if OverflowError happened.
+`eval` can return `NaN` or `Inf` for some inputs, such as `0/0`, or `1/0`, see src/tests.nim
 
 ## What is supported?
-#### You can use these operators: `+`, `-`, `/`, `*`, `%`, `^`
-### These functions are implemented:
+#### Supported operators: `+`, `-`, `/`, `*`, `%`, `^`
+### Implemented mathematical functions:
 - `abs(x)` - the absolute value of `x`
 - `acos(x)` or `arccos(x)` - the arccosine (in radians) of `x`
 - `asin(x)` or `arcsin(x)` - the arcsine (in radians) of `x`
@@ -60,7 +74,7 @@ Also `Inf` (Infinity) can be returned if result is very big, or if OverflowError
 - `sinh(x)` - the hyperbolic sine of `x`
 - `tan(x)` - the tangent of `x`
 - `tanh(x)` - the hyperbolic tangent of `x`
-### Constants:
+### Predefined constants:
 - `pi` - The circle constant (Ludolph's number)
 - `tau` - The circle constant, equals to `2 * pi`
 - `e` - Euler's number

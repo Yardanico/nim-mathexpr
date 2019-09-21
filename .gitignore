@@ -1,2 +1,3 @@
 nimcache
-mathexpr
+src/mathexpr
+tests/tests

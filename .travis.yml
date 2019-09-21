@@ -8,12 +8,7 @@ branches:
 before_install:
 - git clone -b devel --depth 1 git://github.com/nim-lang/Nim.git
 - cd Nim
-- git clone --depth 1 git://github.com/nim-lang/csources
-- cd csources && sh build.sh
-- cd ..
-- bin/nim c koch
-- "./koch boot -d:release"
-- "./koch nimble"
+- sh build_all.sh
 - export PATH=$PWD/bin:$PATH
 - cd ..
 install:

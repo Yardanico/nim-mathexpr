@@ -1,4 +1,4 @@
-import ./mathexpr, unittest, math, strformat, tables
+import mathexpr, unittest, math, strformat
 const
   TestCases = [
     ("1", 1.0),
@@ -85,15 +85,11 @@ const
     ("atan2((3+3),4*2)", 0.6435),
     ("atan2((3+3),(4*2))", 0.6435),
   ]
-  
+
   Infs = [
     "1/0",
     "log(0)",
-    "pow(2,10000000)",
-    "ncr(300,100)",
-    "ncr(300000,100)",
-    "ncr(300000,100)*8",
-    "npr(3,2) * ncr(300000,100)",
+    "pow(2,10000000)"
   ]
 
   Pows = [
@@ -137,48 +133,46 @@ const
     ("npr(100,4)", 94109400.0),
   ]
 
-proc `~=`(a, b: float): bool = 
+proc `~=`(a, b: float): bool =
   ## Checks if difference between two floats is less than 0.0001
   abs(a - b) < 1e-4
 
-suite "Eval test cases":
+suite "Mathexpr tests":
+  setup:
+    let e = newEvaluator()
   for data in TestCases:
     let (expr, expected) = data
     test(&"{expr} == {expected}"):
-      check eval(expr) ~= expected
-  
+      check e.eval(expr) ~= expected
+
   for expr in Infs:
     test(&"{expr} == Inf"):
-      check abs(eval(expr)) == Inf
-  
+      check abs(e.eval(expr)) == Inf
+
   for data in Pows:
     let (first, second) = data
     test(&"{first} == {second}"):
-      let (a, b) = (eval(first), eval(second))
+      let (a, b) = (e.eval(first), e.eval(second))
       check a == b
-  
+
   for expr in NaNs:
     test(&"{expr} == NaN"):
-      check(eval(expr).classify == fcNan)
-  
+      check(e.eval(expr).classify == fcNan)
+
   for data in Combinatorics:
     let (expr, expected) = data
     test(&"{expr} == {expected}"):
-      check eval(expr) ~= expected
+      check e.eval(expr) ~= expected
 
-suite "Custom functions/variables":
   test "Custom function":
-    proc myData(args: seq[float]): float = 
+    proc myData(args: seq[float]): float =
       for arg in args: result += arg * 2
-  
-    addFunc("test", myData)
 
-    check eval(
+    e.addFunc("test", myData)
+    check e.eval(
       "test(1, 2, 3, 4, 5) + 35 - 27"
     ) == (myData(@[1.0, 2, 3, 4, 5]) + 35 - 27)
-  
+
   test "Custom variables":
-    check eval(
-      "x + y - fac(z)", 
-      {"x": 5.0, "y": 36511.0, "z": 5.0}
-    ) == (5.0 + 36511 - 120)
+    e.addVars({"x": 5.0, "y": 36511.0, "z": 5.0})
+    check e.eval("x + y - fac(z)") == (5.0 + 36511 - 120)
