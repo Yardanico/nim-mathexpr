@@ -109,88 +109,37 @@ proc parseFactor(expr: var MathExpression): float =
     let args = expr.getArgs()
 
     result = case funcName
-    of "abs": 
-      checkArgs()
-      abs(args[0])
-    of "acos", "arccos": 
-      checkArgs()
-      arccos(args[0])
-    of "asin", "arcsin": 
-      checkArgs()
-      arcsin(args[0])
-    of "atan", "arctan", "arctg": 
-      checkArgs()
-      arctan(args[0])
-    of "atan2", "arctan2": 
-      checkArgs(2)
-      arctan2(args[0], args[1])
-    of "ceil": 
-      checkArgs()
-      ceil(args[0])
-    of "cos": 
-      checkArgs()
-      cos(args[0])
-    of "cosh": 
-      checkArgs()
-      cosh(args[0])
-    of "deg": 
-      checkArgs()
-      radToDeg(args[0])
-    of "exp": 
-      checkArgs()
-      exp(args[0])
-    of "sqrt": 
-      checkArgs()
-      sqrt(args[0])
-    of "sum": 
-      checkArgs(-1)
-      sum(args)
-    of "fac": 
-      checkArgs()
-      float fac(int(args[0]))
-    of "floor": 
-      checkArgs()
-      floor(args[0])
-    of "ln": 
-      checkArgs()
-      ln(args[0])
-    of "log", "log10": 
-      checkArgs()
-      log10(args[0])
-    of "log2": 
-      checkArgs()
-      log2(args[0])
-    of "max":
-      checkArgs(-1)
-      max(args)
-    of "min": 
-      checkArgs(-1)
-      min(args)
+    of "abs": checkArgs(); abs(args[0])
+    of "acos", "arccos": checkArgs(); arccos(args[0])
+    of "asin", "arcsin": checkArgs(); arcsin(args[0])
+    of "atan", "arctan", "arctg": checkArgs(); arctan(args[0])
+    of "atan2", "arctan2": checkArgs(2); arctan2(args[0], args[1])
+    of "ceil": checkArgs(); ceil(args[0])
+    of "cos": checkArgs(); cos(args[0])
+    of "cosh": checkArgs(); cosh(args[0])
+    of "deg": checkArgs(); radToDeg(args[0])
+    of "exp": checkArgs(); exp(args[0])
+    of "sqrt": checkArgs(); sqrt(args[0])
+    of "sum": checkArgs(-1); sum(args)
+    of "fac": checkArgs(); float fac(int(args[0]))
+    of "floor": checkArgs(); floor(args[0])
+    of "ln": checkArgs(); ln(args[0])
+    of "log", "log10": checkArgs(); log10(args[0])
+    of "log2": checkArgs(); log2(args[0])
+    of "max": checkArgs(-1); max(args)
+    of "min": checkArgs(-1); min(args)
     of "ncr", "binom": 
       checkArgs(2)
       float binom(int args[0], int args[1])
-    of "npr":
+    of "npr": 
       checkArgs(2)
       float binom(int args[0], int args[1]) * fac(int args[1])
-    of "rad": 
-      checkArgs()
-      degToRad(args[0])
-    of "pow": 
-      checkArgs(2)
-      pow(args[0], args[1])
-    of "sin": 
-      checkArgs()
-      sin(args[0])
-    of "sinh": 
-      checkArgs()
-      sinh(args[0])
-    of "tg", "tan": 
-      checkArgs()
-      tan(args[0])
-    of "tanh":
-      checkArgs()
-      tanh(args[0])
-    
+    of "rad": checkArgs(); degToRad(args[0])
+    of "pow": checkArgs(2); pow(args[0], args[1])
+    of "sin": checkArgs(); sin(args[0])
+    of "sinh": checkArgs(); sinh(args[0])
+    of "tg", "tan": checkArgs(); tan(args[0])
+    of "tanh": checkArgs(); tanh(args[0])
     else:
       unknownIdent(funcname)
       NaN
