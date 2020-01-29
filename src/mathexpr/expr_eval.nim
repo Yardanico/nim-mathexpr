@@ -31,11 +31,23 @@ proc eat(expr: var MathExpression, toEat: char): bool =
 proc parseExpression*(expr: var MathExpression): float
 proc parseFactor(expr: var MathExpression): float
 
-proc getArgs(expr: var MathExpression, args = 0, funcName: string,
-    zeroArgs = false): seq[float] =
+proc expectedParen(expr: var MathExpression) = 
+  raise newException(UnexpectedCharacter, &"Expected ')', found {expr.ch}")
+
+proc unknownIdent(funcName: string) = 
+  raise newException(UnknownIdent, &"Ident {funcName} is not defined")
+
+proc unexpectedChar(expr: var MathExpression) = 
+  raise newException(UnexpectedCharacter,
+    &"Unexpected character ${expr.ch}"
+  )
+
+proc getArgs(expr: var MathExpression, zeroArg = true): seq[float] =
   ## Gets argument list for a function call
   result = @[]
   if expr.eat('('):
+    # Empty function call like a()
+    if expr.eat(')'): return 
     # Until it's the end of the argument list
     while expr.ch != ')':
       result.add expr.parseExpression()
@@ -43,29 +55,24 @@ proc getArgs(expr: var MathExpression, args = 0, funcName: string,
       if expr.ch == ',': expr.incPos()
     # We didn't find closing paren
     if not expr.eat(')'):
-      raise newException(
-        UnbalancedParenthesis, &"Expected ')', found ${expr.ch}"
-      )
+      expr.expectedParen()
   else:
     # Parse a factor. It can't be an expression because this
     # would provide wrong results: sqrt 100 * 70
     result.add expr.parseFactor()
-  if (args != 0 and result.len != args):
-    raise newException(
-      ValueError,
-      &"Expected ${args} arguments for ${funcName}, got ${result.len}"
+
+proc checkArgLen(expected, actual: int, funcName: string) = 
+  if actual != expected:
+    raise newException(ValueError,
+      &"Expected {expected} arguments for {funcName}, got {actual}"
     )
-  elif (not zeroArgs and result.len == 0):
-    raise newException(
-      ValueError,
-      &"Expected one or more arguments for ${funcName}, got 0"
+  elif expected == -1 and actual < 1:
+    raise newException(ValueError, 
+      &"Expected at least one argument for {funcName}, got 0"
     )
 
-template getArgs(argsNum = 0, zeroArgs = false): untyped {.dirty.} =
-  expr.getArgs(argsNum, funcName, zeroArgs)
-
-template getArg(): untyped {.dirty.} =
-  expr.getArgs(1, funcName)[0]
+template checkArgs(expected = 1) {.dirty.} = 
+  checkArgLen(expected, args.len, funcName)
 
 proc parseFactor(expr: var MathExpression): float =
   # Unary + and -
@@ -75,68 +82,125 @@ proc parseFactor(expr: var MathExpression): float =
   if expr.eat('('):
     result = expr.parseExpression()
     if not expr.eat(')'):
-      raise newException(UnexpectedCharacter, &"Expected ')', found ${expr.ch}")
+      expr.expectedParen()
 
   elif expr.ch in IdentStartChars:
     var funcName: string
     expr.incPos(parseIdent(expr.input, funcName, expr.pos))
+
     if expr.eval.hasVars:
       let data = expr.eval.vars.getOrDefault(funcName)
       if data != 0.0: return data
 
     if expr.eval.hasFuncs:
       let data = expr.eval.funcs.getOrDefault(funcName)
-      if not data.isNil(): return data(getArgs())
-
-    result = case funcName:
-    of "abs": abs(getArg())
-    of "acos", "arccos": arccos(getArg())
-    of "asin", "arcsin": arcsin(getArg())
-    of "atan", "arctan", "arctg": arctan(getArg())
-    of "atan2", "arctan2":
-      let args = getArgs(2)
-      arctan2(args[0], args[1])
-    of "ceil": ceil(getArg())
-    of "cos": cos(getArg())
-    of "cosh": cosh(getArg())
-    of "deg": radToDeg(getArg())
-    of "exp": exp(getArg())
-    of "sqrt": sqrt(getArg())
-    of "sum": sum(getArgs())
-    of "fac": float fac(int(getArg()))
-    of "floor": floor(getArg())
-    of "ln": ln(getArg())
-    of "log", "log10": log10(getArg())
-    of "log2": log2(getArg())
-    of "max": max(getArgs())
-    of "min": min(getArgs())
-    of "ncr", "binom":
-      let args = getArgs(2)
-      float binom(int args[0], int args[1])
-    of "npr":
-      let args = getArgs(2)
-      float binom(int args[0], int args[1]) * fac(int args[1])
-    of "rad": degToRad(getArg())
-    of "pow":
-      let args = getArgs(2)
-      pow(args[0], args[1])
-    of "sin": sin(getArg())
-    of "sinh": sinh(getArg())
-    of "tan": tan(getArg())
-    of "tanh": tanh(getArg())
+      if not data.isNil(): return data(expr.getArgs())
+    
     # Built-in constants
+    result = case funcName
     of "pi": PI
     of "tau": TAU
     of "e": E
+    else: 0
+    # If this is a constant, immediately return
+    if result != 0: return
+
+    # We are *kinda* sure that we're handling a function now
+    let args = expr.getArgs()
+
+    result = case funcName
+    of "abs": 
+      checkArgs()
+      abs(args[0])
+    of "acos", "arccos": 
+      checkArgs()
+      arccos(args[0])
+    of "asin", "arcsin": 
+      checkArgs()
+      arcsin(args[0])
+    of "atan", "arctan", "arctg": 
+      checkArgs()
+      arctan(args[0])
+    of "atan2", "arctan2": 
+      checkArgs(2)
+      arctan2(args[0], args[1])
+    of "ceil": 
+      checkArgs()
+      ceil(args[0])
+    of "cos": 
+      checkArgs()
+      cos(args[0])
+    of "cosh": 
+      checkArgs()
+      cosh(args[0])
+    of "deg": 
+      checkArgs()
+      radToDeg(args[0])
+    of "exp": 
+      checkArgs()
+      exp(args[0])
+    of "sqrt": 
+      checkArgs()
+      sqrt(args[0])
+    of "sum": 
+      checkArgs(-1)
+      sum(args)
+    of "fac": 
+      checkArgs()
+      float fac(int(args[0]))
+    of "floor": 
+      checkArgs()
+      floor(args[0])
+    of "ln": 
+      checkArgs()
+      ln(args[0])
+    of "log", "log10": 
+      checkArgs()
+      log10(args[0])
+    of "log2": 
+      checkArgs()
+      log2(args[0])
+    of "max":
+      checkArgs(-1)
+      max(args)
+    of "min": 
+      checkArgs(-1)
+      min(args)
+    of "ncr", "binom": 
+      checkArgs(2)
+      float binom(int args[0], int args[1])
+    of "npr":
+      checkArgs(2)
+      float binom(int args[0], int args[1]) * fac(int args[1])
+    of "rad": 
+      checkArgs()
+      degToRad(args[0])
+    of "pow": 
+      checkArgs(2)
+      pow(args[0], args[1])
+    of "sin": 
+      checkArgs()
+      sin(args[0])
+    of "sinh": 
+      checkArgs()
+      sinh(args[0])
+    of "tg", "tan": 
+      checkArgs()
+      tan(args[0])
+    of "tanh":
+      checkArgs()
+      tanh(args[0])
+    
     else:
-      raise newException(UnknownIdent, &"Ident ${funcName} is not defined")
+      unknownIdent(funcname)
+      NaN
 
   # Numbers ('.' is for numbers like '.5')
   elif expr.ch in {'0'..'9', '.'}:
     expr.incPos(parseFloat(expr.input, result, expr.pos))
+  
   else:
-    raise newException(UnexpectedCharacter,
-        &"Unexpected character ${expr.ch}")
+    expr.unexpectedChar()
 
 proc parseTerm(expr: var MathExpression): float =
   result = expr.parseFactor()
@@ -152,7 +216,6 @@ proc parseExpression*(expr: var MathExpression): float =
   result = expr.parseTerm()
   while true:
     case expr.nextOp("+-")
-    of '+':
-      result += expr.parseTerm()
+    of '+': result += expr.parseTerm()
     of '-': result -= expr.parseTerm()
     else: return
