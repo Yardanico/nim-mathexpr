@@ -88,9 +88,8 @@ proc parseFactor(expr: var MathExpression): float =
     var funcName: string
     expr.incPos(parseIdent(expr.input, funcName, expr.pos))
 
-    if expr.eval.hasVars:
-      let data = expr.eval.vars.getOrDefault(funcName)
-      if data != 0.0: return data
+    if expr.eval.hasVars and funcName in expr.eval.vars:
+      return expr.eval.vars[funcName]
 
     if expr.eval.hasFuncs:
       let data = expr.eval.funcs.getOrDefault(funcName)
