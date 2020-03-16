@@ -62,13 +62,13 @@ proc getArgs(expr: var MathExpression, zeroArg = true): seq[float] =
     result.add expr.parseFactor()
 
 proc checkArgLen(expected, actual: int, funcName: string) = 
-  if actual != expected:
-    raise newException(ValueError,
-      &"Expected {expected} arguments for {funcName}, got {actual}"
-    )
-  elif expected == -1 and actual < 1:
+  if expected == -1 and actual < 1:
     raise newException(ValueError, 
       &"Expected at least one argument for {funcName}, got 0"
+    )
+  elif expected != -1 and actual != expected:
+    raise newException(ValueError,
+      &"Expected {expected} arguments for {funcName}, got {actual}"
     )
 
 template checkArgs(expected = 1) {.dirty.} = 
