@@ -28,11 +28,13 @@ jobs:
         export PATH=$HOME/.nimble/bin:$PATH
         echo $PATH
         nimble test
+    - name: Make documentation
+      run: /
+        export PATH=$HOME/.nimble/bin:$PATH
+        mkdir public
+        nim doc -o:public/mathexpr.html src/mathexpr.nim
     - name: Deploy documentation
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./public
-      run: /
-        mkdir public
-        nim doc -o:public/mathexpr.html src/mathexpr.nim
