@@ -9,4 +9,4 @@ $ nimble install mathexpr
 ```
 
 ## Documentation
-https://yardanico.github.io/mathexpr/mathexpr.html
+https://yardanico.github.io/nim-mathexpr/mathexpr.html
