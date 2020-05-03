@@ -176,3 +176,33 @@ suite "Mathexpr tests":
   test "Custom variables":
     e.addVars({"x": 5.0, "y": 36511.0, "z": 5.0})
     check e.eval("x + y - fac(z)") == (5.0 + 36511 - 120)
+
+  test "README example":
+    check e.eval("((4 - 2^3 + 1) * -sqrt(3*3+4*4)) / 2") ~= 7.5
+    # Add some variables to our Evaluator object
+    e.addVars({"a": 5.0})
+    check e.eval("+5^+3+1.1 + a") ~= 131.1
+    # Variables with the same name overwrite the old ones
+    e.addVars({"a": 1.0, "b": 2.0})
+    check e.eval("a + b") ~= 3
+    
+    # Define our custom function which returns 
+    # 25 multiplied by all arguments it got
+    proc myFunc(args: seq[float]): float =
+      result = 25
+      for arg in args:
+        result *= arg
+    
+    e.addFunc("work", myFunc)
+    check e.eval("work(1, 2, 3) + 5") ~= 155
+    
+    # Define a custom function which only accepts two arguments
+    proc test(a: seq[float]): float = 
+      a[0] + a[1]
+    
+    e.addFunc("test", test, 2)
+    check e.eval("test(1, 5)") ~= 6
+    
+    # In some places parentheses and commas are optional:
+    check e.eval("work(1 2 3) + 5") ~= 155
+    check e.eval("sqrt 100 + 5") ~= 15
