@@ -203,7 +203,7 @@ proc parseFactor(expr: var MathExpression): float =
   # Unary + and -
   if expr.eat('+'): return expr.parseFactor()
   elif expr.eat('-'): return -expr.parseFactor()
-
+  
   if expr.eat('('):
     result = expr.parseExpression()
     if not expr.eat(')'):
@@ -354,7 +354,7 @@ proc removeVar*(e: Evaluator, name: string) =
   if e.vars.len == 0:
     e.hasVars = false
 
-proc eval*(e: Evaluator, input: string): float =
+proc eval*(e: Evaluator, input: sink string): float =
   ## Evaluates a math expression from `input` and returns result as `float`
   ##
   ## Can raise an exception if `input` is invalid or an overflow occured
@@ -363,9 +363,9 @@ proc eval*(e: Evaluator, input: string): float =
 
   var expr = MathExpression(
     eval: e,
-    input: input,
     len: input.len,
     ch: input[0],
+    input: move(input),
     pos: 0
   )
 
