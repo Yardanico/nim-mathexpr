@@ -190,9 +190,6 @@ proc checkArgLen(expected, actual: int, funcName: string) =
       &"Expected {expected} arguments for '{funcName}', got {actual}"
     )
 
-template checkArgs(actual: int, name: string, expected = 1) =
-  checkArgLen(expected, actual, name)
-
 proc parseFactor(expr: var MathExpression): float =
   # Unary + and -
   if expr.eat('+'): return expr.parseFactor()
@@ -215,7 +212,7 @@ proc parseFactor(expr: var MathExpression): float =
       if not data.fun.isNil():
         # Check number of arguments passed to a custom function
         let args = expr.getArgs()
-        checkArgs(args.len, funcName, data.argCount)
+        checkArgLen(data.argCount, args.len, funcName)
         return data.fun(args)
 
     # Built-in constants
@@ -233,7 +230,7 @@ proc parseFactor(expr: var MathExpression): float =
     template callArgs(fnCall: untyped, argCount = 1): float =
       # Check that the number of passed arguments is `argCount`
       # and then does `fnCall`
-      checkArgs(args.len, funcName, argCount)
+      checkArgLen(argCount, args.len, funcName)
       fnCall
 
     result = case funcName
