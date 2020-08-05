@@ -296,7 +296,10 @@ proc parseFactor(expr: var MathExpression): float =
 
   # Numbers ('.' is for numbers like '.5')
   elif expr.ch in {'0'..'9', '.'}:
-    expr.incPos(parseFloat(expr.input, result, expr.pos))
+    let cnt = parseFloat(expr.input, result, expr.pos)
+    if cnt == 0:
+      expr.unexpectedChar()
+    expr.incPos(cnt)
 
   else:
     expr.unexpectedChar()
