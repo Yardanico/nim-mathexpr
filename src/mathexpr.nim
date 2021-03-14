@@ -115,22 +115,20 @@ type
 
   Evaluator* = ref object
     ## Main instance of the math evaluator
-    hasFuncs: bool
-    hasVars: bool
-    funcs: TableRef[string, MathCustomFun]
-    vars: TableRef[string, float]
+    funcs: Table[string, MathCustomFun]
+    vars: Table[string, float]
 
 proc atEnd(expr: var MathExpression): bool =
   expr.pos >= expr.len
 
 proc incPos(expr: var MathExpression, addPos = 1): char {.discardable.} =
-  # Increments current pos by 'addPos' characters
+  # Increments current pos by `addPos` characters
   expr.pos += addPos
   expr.ch = if expr.atEnd(): '\0' else: expr.input[expr.pos]
 
 proc nextOp(expr: var MathExpression, opList: set[char]): char =
-  # Checks if the next character is an op from the 'opList'
-  # If yes, returns that character, otherwise returns '\0'
+  # Checks if the next character is an op from the `opList`
+  # If yes, returns that character, otherwise returns `\0`
   expr.incPos(skipWhitespace(expr.input, expr.pos))
   if expr.ch in opList:
     result = expr.ch
@@ -140,7 +138,7 @@ proc nextOp(expr: var MathExpression, opList: set[char]): char =
 
 proc eat(expr: var MathExpression, toEat: char): bool =
   # Skips all whitespace characters and checks if
-  # current character is 'toEat'. If so, gets the next char
+  # current character is `toEat`. If so, gets the next char
   # and returns true
   expr.incPos(skipWhitespace(expr.input, expr.pos))
   if expr.ch == toEat:
@@ -153,13 +151,13 @@ proc parseExpression(expr: var MathExpression): float
 proc parseFactor(expr: var MathExpression): float
 
 proc expectedParen(expr: var MathExpression) =
-  raise newException(ValueError, &"Expected ')', found '{expr.ch}'")
+  raise newException(ValueError, &"Expected `)`, found `{expr.ch}`")
 
 proc unknownIdent(funcName: string) =
-  raise newException(ValueError, &"Ident '{funcName}' is not defined")
+  raise newException(ValueError, &"Ident `{funcName}` is not defined")
 
 proc unexpectedChar(expr: var MathExpression) =
-  raise newException(ValueError, &"Unexpected character '{expr.ch}'")
+  raise newException(ValueError, &"Unexpected character `{expr.ch}`")
 
 proc getArgs(expr: var MathExpression, zeroArg = true): seq[float] =
   # Gets argument list for a function call
@@ -170,7 +168,7 @@ proc getArgs(expr: var MathExpression, zeroArg = true): seq[float] =
     # Until it's the end of the argument list
     while expr.ch != ')':
       result.add expr.parseExpression()
-      # ',' is not mandatory, since we allow things like max(1 2 3 4 5)
+      # `,` is not mandatory, since we allow things like max(1 2 3 4 5)
       if expr.ch == ',': expr.incPos()
     # We didn't find the closing paren
     if not expr.eat(')'):
@@ -191,7 +189,7 @@ proc checkArgLen(expected, actual: int, funcName: string) =
     )
 
 proc parseFactor(expr: var MathExpression): float =
-  # Unary + and -
+  # Unary `+` and `-`
   if expr.eat('+'): return expr.parseFactor()
   elif expr.eat('-'): return -expr.parseFactor()
 
@@ -204,16 +202,20 @@ proc parseFactor(expr: var MathExpression): float =
     var funcName: string
     expr.incPos(parseIdent(expr.input, funcName, expr.pos))
 
-    if expr.eval.hasVars and funcName in expr.eval.vars:
-      return expr.eval.vars[funcName]
+    # Code below uses withValue because it allows us to only
+    # have 1 lookup to check if a variable exists without
+    # having to define an arbitrary default value which might
+    # conflict with a variable declared by the user
 
-    if expr.eval.hasFuncs:
-      let data = expr.eval.funcs.getOrDefault(funcName)
-      if not data.fun.isNil():
-        # Check number of arguments passed to a custom function
-        let args = expr.getArgs()
-        checkArgLen(data.argCount, args.len, funcName)
-        return data.fun(args)
+    # Check for a defined variable
+    expr.eval.vars.withValue(funcName, val):
+      return val[]
+    
+    # Check for a defined function
+    expr.eval.funcs.withValue(funcName, fnc):
+      let args = expr.getArgs()
+      checkArgLen(fnc.argCount, args.len, funcName)
+      return fnc.fun(args)
 
     # Built-in constants
     result = case funcName
@@ -294,7 +296,7 @@ proc parseFactor(expr: var MathExpression): float =
       unknownIdent(funcname)
       NaN
 
-  # Numbers ('.' is for numbers like '.5')
+  # Numbers (`.` is for numbers like `.5`)
   elif expr.ch in {'0'..'9', '.'}:
     let cnt = parseFloat(expr.input, result, expr.pos)
     if cnt == 0:
@@ -331,15 +333,9 @@ proc parse(expr: var MathExpression): float =
 proc newEvaluator*: Evaluator =
   ## Creates a new evaluator instance for evaluating math expressions
   ##
-  ##
   ## There's no limit on the number of evaluator instances,
   ## and all functions and math procedures are local to the current instance
-  Evaluator(
-    vars: newTable[string, float](),
-    hasVars: false,
-    funcs: newTable[string, MathCustomFun](),
-    hasFuncs: false
-  )
+  Evaluator()
 
 proc addFunc*(e: Evaluator, name: string, fun: MathFunction, argCount = -1) =
   ## Adds custom function `fun` with the name `name` to the evaluator `e`
@@ -348,18 +344,14 @@ proc addFunc*(e: Evaluator, name: string, fun: MathFunction, argCount = -1) =
   ## `argCount` specifies the number of arguments this function is allowed
   ## to be called with. If it is `-1`, the function will be able to be called
   ## with one or more arguments, otherwise - only with `argCount` arguments.
-  e.hasFuncs = true
   e.funcs[name] = MathCustomFun(fun: fun, argCount: argCount)
 
 proc removeFunc*(e: Evaluator, name: string) =
   ## Removes function with the name `name` from the evaluator `e`
   e.funcs.del(name)
-  if e.funcs.len == 0:
-    e.hasFuncs = false
 
 proc addVar*(e: Evaluator, name: string, val: float) =
   ## Adds a constant with the name `name` to the evaluator `e`
-  e.hasVars = true
   e.vars[name] = val
 
 proc addVars*(e: Evaluator, vars: openArray[(string, float)]) =
@@ -375,8 +367,6 @@ proc addVars*(e: Evaluator, vars: openArray[(string, float)]) =
 proc removeVar*(e: Evaluator, name: string) =
   ## Removes the specified constant with the name `name` from the evaluator `e`
   e.vars.del(name)
-  if e.vars.len == 0:
-    e.hasVars = false
 
 proc eval*(e: Evaluator, input: string): float =
   ## Evaluates a math expression from `input` and returns result as `float`
