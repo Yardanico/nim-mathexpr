@@ -317,7 +317,7 @@ proc parsePow(expr: var MathExpression): float =
 proc parseTerm(expr: var MathExpression): float =
   result = expr.parsePow()
   while not expr.atEnd():
-    case expr.nextOp({'*', '/', '%', '^'})
+    case expr.nextOp({'*', '/', '%'})
     of '*': result *= expr.parsePow()
     of '/': result /= expr.parsePow()
     of '%': result = result.mod(expr.parsePow())
