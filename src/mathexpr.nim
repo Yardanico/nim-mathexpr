@@ -306,14 +306,21 @@ proc parseFactor(expr: var MathExpression): float =
   else:
     expr.unexpectedChar()
 
-proc parseTerm(expr: var MathExpression): float =
+proc parsePow(expr: var MathExpression): float =
   result = expr.parseFactor()
   while not expr.atEnd():
-    case expr.nextOp({'*', '/', '%', '^'})
-    of '*': result *= expr.parseFactor()
-    of '/': result /= expr.parseFactor()
-    of '%': result = result.mod(expr.parseFactor())
-    of '^': result = result.pow(expr.parseFactor())
+    case expr.nextOp({'^'})
+    of '^':
+      result = result.pow(expr.parseFactor())
+    else: break
+
+proc parseTerm(expr: var MathExpression): float =
+  result = expr.parsePow()
+  while not expr.atEnd():
+    case expr.nextOp({'*', '/', '%'})
+    of '*': result *= expr.parsePow()
+    of '/': result /= expr.parsePow()
+    of '%': result = result.mod(expr.parsePow())
     else: break
 
 proc parseExpression(expr: var MathExpression): float =
