@@ -1,4 +1,4 @@
-import mathexpr, unittest, math, strformat
+import mathexpr, unittest, math, strformat, strutils
 const
   TestCases = [
     ("1", 1.0),
@@ -134,6 +134,15 @@ const
     ("npr(100,4)", 94109400.0),
   ]
 
+  Cmp = [
+    ("1 == 1", "1.0"),
+    ("1 != 1", "0.0"),
+    ("1 == 1 < 2", "1 == (1 < 2)"),
+    ("1 == 1 > 2", "1 == (1 > 2)"),
+    ("1 < 1 != 1", "(1 < 1) != 1"),
+    ("1 < 1 < 1 + 2", "(1 < 1) < (1 + 2)"),
+  ]
+
 proc `~=`(a, b: float): bool =
   ## Checks if difference between two floats is less than 0.0001
   abs(a - b) < 1e-4
@@ -164,6 +173,11 @@ suite "Mathexpr tests":
     let (expr, expected) = data
     test(&"{expr} == {expected}"):
       check e.eval(expr) ~= expected
+
+  for data in Cmp:
+    let (expr, expected) = data
+    test(&"{expr} == {expected}"):
+      check e.eval(expr) ~= e.eval(expected)
 
   test "Custom function":
     proc myData(args: seq[float]): float =
