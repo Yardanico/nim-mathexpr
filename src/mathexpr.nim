@@ -216,82 +216,75 @@ proc parseFactor(expr: var MathExpression): float =
       let args = expr.getArgs()
       checkArgLen(fnc.argCount, args.len, funcName)
       return fnc.fun(args)
+    
+    template withArgs(args: untyped, argCount: int, body: untyped): untyped =
+      let args = expr.getArgs()
+      checkArgLen(argCount, args.len, funcName)
+      body
 
-    # Built-in constants
     result = case funcName
+    # Built-in constants
     of "pi": PI
     of "tau": TAU
     of "e": E
-    else: 0
-    # If this is a constant, immediately return
-    if result != 0: return
 
-    # We are *kinda* sure that we're handling a function now
-    let args = expr.getArgs()
-
-    template callArgs(fnCall: untyped, argCount = 1): float =
-      # Check that the number of passed arguments is `argCount`
-      # and then does `fnCall`
-      checkArgLen(argCount, args.len, funcName)
-      fnCall
-
-    result = case funcName
+    # Built-in functions
     of "abs":
-      callArgs abs(args[0])
+      withArgs args, 1: abs(args[0])
     of "acos", "arccos":
-      callArgs arccos(args[0])
+      withArgs args, 1: arccos(args[0])
     of "asin", "arcsin":
-      callArgs arcsin(args[0])
+      withArgs args, 1: arcsin(args[0])
     of "atan", "arctan", "arctg":
-      callArgs arctan(args[0])
+      withArgs args, 1: arctan(args[0])
     of "atan2", "arctan2":
-      callArgs arctan2(args[0], args[1]), 2
+      withArgs args, 2: arctan2(args[0], args[1])
     of "ceil":
-      callArgs ceil(args[0])
+      withArgs args, 1: ceil(args[0])
     of "cos":
-      callArgs cos(args[0])
+      withArgs args, 1: cos(args[0])
     of "cosh":
-      callArgs cosh(args[0])
+      withArgs args, 1: cosh(args[0])
     of "deg":
-      callArgs radToDeg(args[0])
+      withArgs args, 1: radToDeg(args[0])
     of "exp":
-      callArgs exp(args[0])
+      withArgs args, 1: exp(args[0])
     of "sgn":
-      callArgs float(sgn(args[0]))
+      withArgs args, 1: float(sgn(args[0]))
     of "sqrt":
-      callArgs sqrt(args[0])
+      withArgs args, 1: sqrt(args[0])
     of "sum":
-      callArgs sum(args), -1
+      withArgs args, -1: sum(args)
     of "fac":
-      callArgs float(fac(int(args[0])))
+      withArgs args, 1: float(fac(int(args[0])))
     of "floor":
-      callArgs floor(args[0])
+      withArgs args, 1: floor(args[0])
     of "ln":
-      callArgs ln(args[0])
+      withArgs args, 1: ln(args[0])
     of "log", "log10":
-      callArgs log10(args[0])
+      withArgs args, 1: log10(args[0])
     of "log2":
-      callArgs log2(args[0])
+      withArgs args, 1: log2(args[0])
     of "max":
-      callArgs max(args), -1
+      withArgs args, -1: max(args)
     of "min":
-      callArgs min(args), -1
+      withArgs args, -1: min(args)
     of "ncr", "binom":
-      callArgs float(binom(int args[0], int args[1])), 2
+      withArgs args, 2: float(binom(int args[0], int args[1]))
     of "npr":
-      callArgs float(binom(int args[0], int args[1]) * fac(int args[1])), 2
+      withArgs args, 2: float(binom(int args[0], int args[1]) * fac(int args[1]))
     of "rad":
-      callArgs degToRad(args[0])
+      withArgs args, 1: degToRad(args[0])
     of "pow":
-      callArgs pow(args[0], args[1]), 2
+      withArgs args, 2: pow(args[0], args[1])
     of "sin":
-      callArgs sin(args[0])
+      withArgs args, 1: sin(args[0])
     of "sinh":
-      callArgs sinh(args[0])
+      withArgs args, 1: sinh(args[0])
     of "tg", "tan":
-      callArgs tan(args[0])
+      withArgs args, 1: tan(args[0])
     of "tanh":
-      callArgs tanh(args[0])
+      withArgs args, 1: tanh(args[0])
     else:
       unknownIdent(funcname)
       NaN
