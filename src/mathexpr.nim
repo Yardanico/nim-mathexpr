@@ -188,10 +188,11 @@ proc checkArgLen(expected, actual: int, funcName: string) =
       &"Expected {expected} arguments for '{funcName}', got {actual}"
     )
 
+proc parsePow(expr: var MathExpression): float
 proc parseFactor(expr: var MathExpression): float =
   # Unary `+` and `-`
-  if expr.eat('+'): return expr.parseFactor()
-  elif expr.eat('-'): return -expr.parseFactor()
+  if expr.eat('+'): return expr.parsePow()
+  elif expr.eat('-'): return -expr.parsePow()
 
   if expr.eat('('):
     result = expr.parseExpression()
