@@ -1,4 +1,4 @@
-import mathexpr, unittest, math, strformat
+import mathexpr, unittest, math, strformat, strutils
 const
   TestCases = [
     ("1", 1.0),
@@ -208,3 +208,9 @@ suite "Mathexpr tests":
     # In some places parentheses and commas are optional:
     check e.eval("work(1 2 3) + 5") ~= 155
     check e.eval("sqrt 100 + 5") ~= 15
+  
+  test "Test undefined ident":
+    try:
+      discard e.eval("ident")
+    except:
+      check "defined" in getCurrentExceptionMsg()
