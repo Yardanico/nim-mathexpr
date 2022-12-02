@@ -146,6 +146,11 @@ proc eat(expr: var MathExpression, toEat: char): bool =
     true
   else: false
 
+template swallow(expr: var MathExpression, toEat: char) =
+  # Same as eat, but raise unexpected char when toEat does not match
+  if not expr.eat(toEat): expr.unexpectedChar() 
+  
+
 # Forward declaration because of recursive dependency
 proc parseExpression(expr: var MathExpression): float
 proc parseFactor(expr: var MathExpression): float
@@ -317,12 +322,59 @@ proc parseTerm(expr: var MathExpression): float =
     of '%': result = result.mod(expr.parsePow())
     else: break
 
-proc parseExpression(expr: var MathExpression): float =
+proc parseAddition(expr: var MathExpression): float =
   result = expr.parseTerm()
   while not expr.atEnd():
     case expr.nextOp({'+', '-'})
     of '+': result += expr.parseTerm()
     of '-': result -= expr.parseTerm()
+    else: break
+
+proc parseRelative(expr: var MathExpression): float =
+  result = expr.parseAddition()
+  while not expr.atEnd():
+    let op = expr.nextOp({'<', '>'})
+    case op
+    of '<', '>':
+      if expr.eat('='):
+        result = case op
+        of '<':
+          if result <= expr.parseAddition(): 1.0
+          else: 0.0
+        of '>':
+          if result >= expr.parseAddition(): 1.0
+          else: 0.0
+        else: NaN # unreachable
+      else:
+        result = case op
+        of '<':
+          if result < expr.parseAddition(): 1.0
+          else: 0.0
+        of '>':
+          if result > expr.parseAddition(): 1.0
+          else: 0.0
+        else: NaN # unreachable
+    else: break
+
+proc `~=`(a, b: float): bool =
+  ## Checks if difference between two floats is less than 0.0001
+  abs(a - b) < 1e-4
+
+proc parseExpression(expr: var MathExpression): float =
+  result = expr.parseRelative()
+  while not expr.atEnd():
+    let op = expr.nextOp({'=', '!'})
+    case op
+    of '=', '!':
+      expr.swallow('=')
+      result = case op
+      of '=':
+        if result ~= expr.parseExpression(): 1.0
+        else: 0.0
+      of '!':
+        if not (result ~= expr.parseExpression()): 1.0
+        else: 0.0
+      else: NaN # unreachable
     else: break
 
 proc parse(expr: var MathExpression): float =
