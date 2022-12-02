@@ -53,7 +53,7 @@
 
 ## What is supported?
 ## ------------------
-## Supported operators include `+`, `-`, `/`, `*`, `%`, `^`
+## Supported operators include `+`, `-`, `/`, `*`, `%`, `^`, `<`, `>`, `<=`, `>=`, `==`, `!=`
 ##
 ## Implemented mathematical functions:
 ## * `abs(x)` - the absolute value of `x`
