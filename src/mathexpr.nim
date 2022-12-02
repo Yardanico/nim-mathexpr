@@ -93,6 +93,26 @@
 ## * `pi` - The circle constant (Ludolph's number)
 ## * `tau` - The circle constant, equals to `2 * pi`
 ## * `e` - Euler's number
+## 
+## Operators in more detail
+## ------------------------
+## 
+## Following table shows order of evaluation of various operators, lower the precedence - sooner it shall be evaluated.
+## 
+## | Precedence | Operator                                               |
+## |------------|--------------------------------------------------------|
+## | 1          | Exponentiation `^`                                     |
+## | 6          | Unary `+` and `-`                                      |
+## | 2          | Multiplication/division `*`, `/`, `%`                  |
+## | 3          | Addition/substraction `+`, `-`                         |
+## | 4          | Less than/Greater than comparison `<`, `<=`, `>`, `>=` |
+## | 5          | Exact comparison `==`, `!=`                            |
+##
+## Notes on comparison:
+## - Comparison operators return a float value, 0.0 for false and 1.0 for true
+## - Every number in mathexpr is a float. Comparing floats exactly is a bit \
+## problematic due to precision, so difference less than 0.0001 makes 2 numbers equal \
+## by mathexpr's standards.
 
 import math, strutils, parseutils, tables, strformat
 
