@@ -102,11 +102,11 @@
 ## | Precedence | Operator                                               |
 ## |------------|--------------------------------------------------------|
 ## | 1          | Exponentiation `^`                                     |
-## | 6          | Unary `+` and `-`                                      |
-## | 2          | Multiplication/division `*`, `/`, `%`                  |
-## | 3          | Addition/substraction `+`, `-`                         |
-## | 4          | Less than/Greater than comparison `<`, `<=`, `>`, `>=` |
-## | 5          | Exact comparison `==`, `!=`                            |
+## | 2          | Unary `+` and `-`                                      |
+## | 3          | Multiplication/division `*`, `/`, `%`                  |
+## | 4          | Addition/substraction `+`, `-`                         |
+## | 5          | Less than/Greater than comparison `<`, `<=`, `>`, `>=` |
+## | 6          | Exact comparison `==`, `!=`                            |
 ##
 ## Notes on comparison:
 ## - Comparison operators return a float value, 0.0 for false and 1.0 for true
