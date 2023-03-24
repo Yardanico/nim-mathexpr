@@ -1,0 +1,13 @@
+nimTitle	mathexpr	mathexpr.html	module src/mathexpr		0
+nim	MathFunction	mathexpr.html#MathFunction	type MathFunction		120
+nim	Evaluator	mathexpr.html#Evaluator	type Evaluator		136
+nim	newEvaluator	mathexpr.html#newEvaluator	proc newEvaluator(): Evaluator		406
+nim	addFunc	mathexpr.html#addFunc,Evaluator,string,MathFunction,int	proc addFunc(e: Evaluator; name: string; fun: MathFunction; argCount = -1)		413
+nim	removeFunc	mathexpr.html#removeFunc,Evaluator,string	proc removeFunc(e: Evaluator; name: string)		422
+nim	addVar	mathexpr.html#addVar,Evaluator,string,float	proc addVar(e: Evaluator; name: string; val: float)		426
+nim	addVars	mathexpr.html#addVars,Evaluator,openArray[]	proc addVars(e: Evaluator; vars: openArray[(string, float)])		430
+nim	removeVar	mathexpr.html#removeVar,Evaluator,string	proc removeVar(e: Evaluator; name: string)		440
+nim	eval	mathexpr.html#eval,Evaluator,string	proc eval(e: Evaluator; input: string): float		444
+heading	What is supported?	mathexpr.html#what-is-supportedqmark	 What is supported?		0
+heading	Predefined constants	mathexpr.html#predefined-constants	 Predefined constants		0
+heading	Operators in more detail	mathexpr.html#operators-in-more-detail	 Operators in more detail		0

@@ -101,7 +101,9 @@
 
   </div>
   <div class="nine columns" id="content">
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L1" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L1" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
     <div id="tocRoot"></div>
     
     <p class="module-desc"><p>This library is a relatively small (&lt;500 cloc) mathematical expression evaluator library written in Nim.</p>
@@ -188,11 +190,11 @@ elements from a set of <tt class="docutils literal"><span class="pre"><span clas
 <h1><a class="toc-backref" id="operators-in-more-detail" href="#operators-in-more-detail">Operators in more detail</a></h1><p>Following table shows order of evaluation of various operators, lower the precedence - sooner it shall be evaluated.</p>
 <table border="1" class="docutils"><tr><th>Precedence</th><th>Operator</th></tr>
 <tr><td>1</td><td>Exponentiation <tt class="docutils literal"><span class="pre"><span class="Operator">^</span></span></tt></td></tr>
-<tr><td>6</td><td>Unary <tt class="docutils literal"><span class="pre"><span class="Operator">+</span></span></tt> and <tt class="docutils literal"><span class="pre"><span class="Operator">-</span></span></tt></td></tr>
-<tr><td>2</td><td>Multiplication/division <tt class="docutils literal"><span class="pre"><span class="Operator">*</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">/</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">%</span></span></tt></td></tr>
-<tr><td>3</td><td>Addition/substraction <tt class="docutils literal"><span class="pre"><span class="Operator">+</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">-</span></span></tt></td></tr>
-<tr><td>4</td><td>Less than/Greater than comparison <tt class="docutils literal"><span class="pre"><span class="Operator">&lt;</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">&lt;=</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">&gt;</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">&gt;=</span></span></tt></td></tr>
-<tr><td>5</td><td>Exact comparison <tt class="docutils literal"><span class="pre"><span class="Operator">==</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">!=</span></span></tt></td></tr>
+<tr><td>2</td><td>Unary <tt class="docutils literal"><span class="pre"><span class="Operator">+</span></span></tt> and <tt class="docutils literal"><span class="pre"><span class="Operator">-</span></span></tt></td></tr>
+<tr><td>3</td><td>Multiplication/division <tt class="docutils literal"><span class="pre"><span class="Operator">*</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">/</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">%</span></span></tt></td></tr>
+<tr><td>4</td><td>Addition/substraction <tt class="docutils literal"><span class="pre"><span class="Operator">+</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">-</span></span></tt></td></tr>
+<tr><td>5</td><td>Less than/Greater than comparison <tt class="docutils literal"><span class="pre"><span class="Operator">&lt;</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">&lt;=</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">&gt;</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">&gt;=</span></span></tt></td></tr>
+<tr><td>6</td><td>Exact comparison <tt class="docutils literal"><span class="pre"><span class="Operator">==</span></span></tt>, <tt class="docutils literal"><span class="pre"><span class="Operator">!=</span></span></tt></td></tr>
 </table><p>Notes on comparison:</p>
 <ul class="simple"><li>Comparison operators return a float value, 0.0 for false and 1.0 for true</li>
 <li>Every number in mathexpr is a float. Comparing floats exactly is a bit 
@@ -209,7 +211,9 @@ by mathexpr's standards.</li>
   <dd>
     
     Main instance of the math evaluator
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L136" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L136" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 <div id="MathFunction">
@@ -218,7 +222,9 @@ by mathexpr's standards.</li>
     
     
 Type of the procedure definition for custom math functions
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L120" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L120" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 
@@ -236,7 +242,9 @@ Type of the procedure definition for custom math functions
     <p>Adds custom function <tt class="docutils literal"><span class="pre"><span class="Identifier">fun</span></span></tt> with the name <tt class="docutils literal"><span class="pre"><span class="Identifier">name</span></span></tt> to the evaluator <tt class="docutils literal"><span class="pre"><span class="Identifier">e</span></span></tt> which will then be available inside of all following <tt class="docutils literal"><span class="pre"><span class="Identifier">e</span><span class="Operator">.</span><span class="Identifier">eval</span><span class="Punctuation">(</span><span class="Punctuation">)</span></span></tt> calls.</p>
 <p><tt class="docutils literal"><span class="pre"><span class="Identifier">argCount</span></span></tt> specifies the number of arguments this function is allowed to be called with. If it is <tt class="docutils literal"><span class="pre"><span class="Operator">-</span><span class="DecNumber">1</span></span></tt>, the function will be able to be called with one or more arguments, otherwise - only with <tt class="docutils literal"><span class="pre"><span class="Identifier">argCount</span></span></tt> arguments.</p>
 
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L413" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L413" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 
@@ -248,7 +256,9 @@ Type of the procedure definition for custom math functions
   <dd>
     
     Adds a constant with the name <tt class="docutils literal"><span class="pre"><span class="Identifier">name</span></span></tt> to the evaluator <tt class="docutils literal"><span class="pre"><span class="Identifier">e</span></span></tt>
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L426" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L426" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 
@@ -264,7 +274,9 @@ Type of the procedure definition for custom math functions
 <pre class="listing"><span class="Keyword">let</span> <span class="Identifier">e</span> <span class="Operator">=</span> <span class="Identifier">newEvaluator</span><span class="Punctuation">(</span><span class="Punctuation">)</span>
 <span class="Identifier">e</span><span class="Operator">.</span><span class="Identifier">addVars</span><span class="Punctuation">(</span><span class="Punctuation">{</span><span class="StringLit">&quot;a&quot;</span><span class="Punctuation">:</span> <span class="FloatNumber">3.0</span><span class="Punctuation">,</span> <span class="StringLit">&quot;b&quot;</span><span class="Punctuation">:</span> <span class="FloatNumber">5.5</span><span class="Punctuation">}</span><span class="Punctuation">)</span>
 <span class="Identifier">assert</span> <span class="Identifier">e</span><span class="Operator">.</span><span class="Identifier">eval</span><span class="Punctuation">(</span><span class="StringLit">&quot;a ^ a + b&quot;</span><span class="Punctuation">)</span> <span class="Operator">==</span> <span class="FloatNumber">32.5</span></pre>
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L430" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L430" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 
@@ -278,7 +290,9 @@ Type of the procedure definition for custom math functions
     <p>Evaluates a math expression from <tt class="docutils literal"><span class="pre"><span class="Identifier">input</span></span></tt> and returns result as <tt class="docutils literal"><span class="pre"><span class="Identifier">float</span></span></tt></p>
 <p>Can raise an exception if <tt class="docutils literal"><span class="pre"><span class="Identifier">input</span></span></tt> is invalid or an overflow occured</p>
 
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L444" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L444" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 
@@ -291,7 +305,9 @@ Type of the procedure definition for custom math functions
     <p>Creates a new evaluator instance for evaluating math expressions</p>
 <p>There's no limit on the number of evaluator instances, and all functions and math procedures are local to the current instance</p>
 
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L406" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L406" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 
@@ -302,7 +318,9 @@ Type of the procedure definition for custom math functions
   <dd>
     
     Removes function with the name <tt class="docutils literal"><span class="pre"><span class="Identifier">name</span></span></tt> from the evaluator <tt class="docutils literal"><span class="pre"><span class="Identifier">e</span></span></tt>
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L422" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L422" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 
@@ -313,7 +331,9 @@ Type of the procedure definition for custom math functions
   <dd>
     
     Removes the specified constant with the name <tt class="docutils literal"><span class="pre"><span class="Identifier">name</span></span></tt> from the evaluator <tt class="docutils literal"><span class="pre"><span class="Identifier">e</span></span></tt>
-    
+    <a href="https://github.com/Yardanico/nim-mathexpr/tree/devel/src/mathexpr.nim#L440" class="link-seesrc" target="_blank">Source</a>&nbsp;&nbsp;
+<a href="https://github.com/Yardanico/nim-mathexpr/edit/devel/src/mathexpr.nim#L440" class="link-seesrc" target="_blank" >Edit</a>&nbsp;&nbsp;
+
   </dd>
 </div>
 
@@ -328,7 +348,7 @@ Type of the procedure definition for custom math functions
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2023-03-24 20:15:34 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2023-03-24 20:25:08 UTC</small>
       </div>
     </div>
   </div>
